@@ -13,6 +13,11 @@ import random
 import hashlib
 import os
 from bs4 import BeautifulSoup
+import folium
+import networkx as nx
+import matplotlib.pyplot as plt
+import pandas as pd
+import matplotlib.pyplot as plt
 
 console = Console()
 
@@ -55,6 +60,63 @@ def get_nitro_global_stats():
     console.print(f"🚀 **Nitro Premium :** ~{nitro_premium:,} abonnés")
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+
+def create_map():
+    """ Génère une carte interactive avec des points géolocalisés """
+    m = folium.Map(location=[48.8566, 2.3522], zoom_start=6)  # Coordonnées de Paris
+    
+    # Exemple : Ajout de points d’intérêt
+    locations = [
+        {"name": "Tour Eiffel", "lat": 48.8584, "lon": 2.2945},
+        {"name": "Louvre", "lat": 48.8606, "lon": 2.3376},
+        {"name": "Notre-Dame", "lat": 48.8527, "lon": 2.3500},
+    ]
+    
+    for loc in locations:
+        folium.Marker([loc["lat"], loc["lon"]], popup=loc["name"], icon=folium.Icon(color="blue")).add_to(m)
+
+    m.save("map.html")  # Enregistre la carte sous forme de fichier HTML
+
+    console.print("[green]✅ Carte créée ! Ouvre 'map.html' pour voir les points géolocalisés.[/green]")
+
+def create_network_graph():
+    """ Génère un graphique de réseau montrant les connexions entre individus """
+    G = nx.Graph()
+
+    # Exemple : Ajout de connexions entre personnes
+    relations = [
+        ("Alice", "Bob"),
+        ("Bob", "Charlie"),
+        ("Alice", "Charlie"),
+        ("Charlie", "David"),
+        ("David", "Eve"),
+    ]
+
+    G.add_edges_from(relations)
+
+    plt.figure(figsize=(8,6))
+    nx.draw(G, with_labels=True, node_color="lightblue", edge_color="gray", node_size=2000, font_size=12)
+    plt.title("Graphique de réseau")
+    plt.show()
+
+    console.print("[green]✅ Graphique généré ![/green]")
+
+def create_dashboard():
+    """ Génère un dashboard avec des KPIs """
+    data = {
+        "Catégorie": ["Mentions", "Influenceurs", "Sources Fiables", "Fuites détectées"],
+        "Valeur": [1520, 45, 180, 27]
+    }
+
+    df = pd.DataFrame(data)
+
+    plt.figure(figsize=(8,6))
+    plt.barh(df["Catégorie"], df["Valeur"], color="blue")
+    plt.xlabel("Valeur")
+    plt.title("Dashboard - KPIs de l'analyse OSINT")
+    plt.show()
+
+    console.print("[green]✅ Dashboard généré avec succès ![/green]")
 
 def global_nitro_stat_server(invite_code):
     """Récupère les membres Nitro sur un serveur Discord via l’invitation"""
@@ -126,7 +188,6 @@ def website_vulnerability_scanner():
     print_header()
     console.print("[bold cyan]\n====== Website Vulnerability Scanner ======[/bold cyan]")
 
-    # Entrée de l'URL à analyser
     url = console.input("🔗 Entrez l'URL du site à scanner : ").strip()
 
     try:
@@ -134,7 +195,7 @@ def website_vulnerability_scanner():
         console.print(f"\n🔍 Analyse de [bold yellow]{url}[/bold yellow]...\n")
         console.print(f"🔹 Code HTTP : {response.status_code}")
 
-        # Vérifier les headers HTTP
+        # Vérifier les headers de sécurité
         security_headers = ["Strict-Transport-Security", "X-Frame-Options", "X-XSS-Protection", "Content-Security-Policy"]
         for header in security_headers:
             if header in response.headers:
@@ -142,17 +203,36 @@ def website_vulnerability_scanner():
             else:
                 console.print(f"[red]❌ {header} manquant[/red]")
 
-        # Analyser les liens internes
+        # Détection des erreurs SQL
+        sql_errors = ["mysql_fetch_array()", "You have an error in your SQL syntax", "Error executing SQL", "Undefined index"]
+        for error in sql_errors:
+            if error in response.text:
+                console.print(f"[red]❗ Potentielle vulnérabilité SQL trouvée : {error}[/red]")
+
+        # Analyse des formulaires HTML
         soup = BeautifulSoup(response.text, "html.parser")
-        links = [a['href'] for a in soup.find_all('a', href=True) if "http" in a['href']]
-        console.print(f"\n🔗 Nombre de liens détectés : {len(links)}")
-        console.print(f"🔗 Premier lien trouvé : {links[0] if links else 'Aucun lien détecté'}")
+        forms = soup.find_all("form")
+        console.print(f"\n🔎 Nombre de formulaires détectés : {len(forms)}")
+        if forms:
+            console.print("[yellow]⚠️ Vérifie si les entrées sont bien filtrées contre l’injection SQL.[/yellow]")
+
+        # Vérification des ports ouverts
+        domain = url.replace("https://", "").replace("http://", "").split("/")[0]
+        common_ports = [21, 22, 23, 25, 53, 80, 443, 3306, 8080]  # Ports classiques
+        console.print("\n🔎 Scan rapide des ports ouverts...")
+
+        for port in common_ports:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2)
+            result = sock.connect_ex((domain, port))
+            if result == 0:
+                console.print(f"[red]❌ Port ouvert détecté : {port}[/red]")
+            sock.close()
 
     except requests.exceptions.RequestException as e:
         console.print(f"[red]❌ Erreur lors de l'analyse : {e}[/red]")
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
-
 
 
 def social_check_tool():
@@ -285,45 +365,45 @@ def ip_generator():
     console.input("🔄 Appuie sur Entrée pour revenir au menu...")
 
 def osint_film_serie():
-    print_header()
-    console.print("[bold cyan]\n====== OSINT FILMS & SÉRIES (Recherche tolérante + plateformes) ======[/bold cyan]")
-    console.print("Recherche par nom (même avec fautes)")
+    console.clear()
+    title = Text("007 OSINT", style="bold red", justify="center")
+    subtitle = Text("Created by KRATORAK", style="italic green", justify="center")
+    panel = Panel(Align.center(Text.assemble(title, "\n", subtitle)), style="bold blue", box=box.DOUBLE)
+    console.print(panel)
 
     query = console.input("\n🎥 Entrez le nom du film ou série : ").strip()
     console.print("\n🔍 Recherche approximative...")
 
-    movies = search_titles_approximate(query, "movie", limit=10)
-    series = search_titles_approximate(query, "tv", limit=10)
+    movies = search_titles_approximate(query, "movie", limit=5)
+    series = search_titles_approximate(query, "tv", limit=5)
 
-    console.print(f"\n[bold yellow]{len(movies)} films trouvés[/bold yellow] (meilleurs résultats)")
-    console.print(f"[bold yellow]{len(series)} séries trouvées[/bold yellow] (meilleurs résultats)\n")
+    console.print(f"\n[bold yellow]{len(movies)} films trouvés[/bold yellow]")
+    console.print(f"[bold yellow]{len(series)} séries trouvées[/bold yellow]\n")
 
     def print_info(results, media_type):
-        for r in results:
-            title = r.get("title") or r.get("name")
-            date = r.get("release_date") or r.get("first_air_date") or "n/a"
-            note = r.get("vote_average", "n/a")
-            overview = r.get("overview", "")
-            tmdb_id = r.get("id")
-
+        for i, res in enumerate(results, 1):
+            title = res.get("title") or res.get("name")
+            release_date = res.get("release_date") or res.get("first_air_date") or "N/A"
+            tmdb_id = res.get("id")
             providers = get_watch_providers(media_type, tmdb_id)
-            providers_str = ", ".join(providers) if providers else "Aucune info dispo"
+            providers_str = ", ".join(providers) if providers else "Non disponible"
+            console.print(f"[cyan]{i}. {title}[/cyan] ({release_date})")
+            console.print(f"    Plateformes disponibles: [green]{providers_str}[/green]\n")
 
-            url = f"https://www.themoviedb.org/{media_type}/{tmdb_id}"
+    if movies:
+        console.print("[bold underline]Films :[/bold underline]")
+        print_info(movies, "movie")
 
-            console.print(f"[bold green]{title}[/bold green] ({date[:4]}) - Note: [yellow]{note}[/yellow]")
-            console.print(f"📜 Synopsis : {overview[:150]}...")
-            console.print(f"📺 Où regarder : [cyan]{providers_str}[/cyan]")
-            console.print(f"🔗 Plus d'infos : [blue underline]{url}[/blue underline]\n")
-            time.sleep(0.3)
+    if series:
+        console.print("[bold underline]Séries :[/bold underline]")
+        print_info(series, "tv")
 
-    console.print("[bold magenta]----- Films -----[/bold magenta]")
-    print_info(movies, "movie")
+    if not movies and not series:
+        console.print("[red]Aucun résultat trouvé pour votre recherche.[/red]")
 
-    console.print("[bold magenta]----- Séries -----[/bold magenta]")
-    print_info(series, "tv")
+    console.input("\n🔄 Appuyez sur Entrée pour revenir au menu...")
 
-    console.input("Appuyez sur Entrée pour revenir au menu...")
+
 
 def get_domain_info():
     domain = console.input("🌐 Entrez un nom de domaine : ").strip()
@@ -412,19 +492,28 @@ def discord_webhook_generator():
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
 def discord_server_info():
+    """ Récupère les infos d'un serveur Discord via son lien d'invitation """
     print_header()
     console.print("[bold cyan]\n====== Discord Server Info ======[/bold cyan]")
-    server_id = console.input("🆔 Entrez l’ID du serveur Discord : ").strip()
+
+    invite_code = console.input("🔗 Entrez l'invitation du serveur Discord : ").strip()
+    invite_code = invite_code.split("/")[-1]  # Récupère juste le code d'invitation
 
     headers = {"Authorization": "Bot VOTRE_BOT_TOKEN"}
-    r = requests.get(f"https://discord.com/api/v10/guilds/{server_id}", headers=headers)
+    response = requests.get(f"https://discord.com/api/v10/invites/{invite_code}?with_counts=true", headers=headers)
 
-    if r.status_code == 200:
-        server_data = r.json()
-        console.print(f"\n🏰 Nom du serveur : {server_data['name']}")
-        console.print(f"📋 ID du serveur : {server_data['id']}")
+    if response.status_code == 200:
+        data = response.json()
+        server_name = data["guild"]["name"]
+        member_count = data["approximate_member_count"]
+        online_count = data["approximate_presence_count"]
+
+        console.print(f"\n🏰 **Serveur :** {server_name}")
+        console.print(f"👥 **Membres :** {member_count}")
+        console.print(f"🟢 **Membres en ligne :** {online_count}")
+
     else:
-        console.print("[red]❌ ID invalide ou erreur.[/red]")
+        console.print("[red]❌ Erreur : Invitation invalide ou impossible d'obtenir les infos du serveur.[/red]")
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
@@ -471,7 +560,7 @@ def main_menu():
 
         options = [
             ("1", "🔎 Vérification multi-réseaux sociaux", "Check usernames across social platforms"),
-            ("2", "🎥 OSINT FILM ET SÉRIE", "Recherche films et séries avec plateformes"),
+            ("2", "🎥 OSINT FILM ET SÉRIE", "Recherche films et séries avec plateformes légales"),
             ("3", "🌐 WHOIS & DNS Lookup", "Obtenir infos sur un domaine"),
             ("4", "🦠 Vérification URL", "Analyse de site web avec VirusTotal"),
             ("5", "📍 Géolocalisation IP", "Trouver l'emplacement d'une adresse IP"),
@@ -482,10 +571,13 @@ def main_menu():
             ("10", "🛡 Discord Token Info", "Affiche des infos d’un compte Discord"),
             ("11", "🔗 Discord Webhook Info", "Affiche des infos d’un webhook Discord"),
             ("12", "⚙️ Discord Webhook Generator", "Permet d’envoyer un message avec un webhook"),
-            ("13", "🏰 Discord Server Info", "Affiche des infos publiques sur un serveur"),
+            ("13", "🏰 Discord Server Info", "Affiche les infos détaillées d’un serveur via une invitation"),
             ("14", "💎 Nitro Global Stats", "Estimation du nombre de Nitro dans le monde"),
             ("15", "📊 Global Nitro Stat Serveur", "Liste les membres Nitro d'un serveur avec leur rang"),
-            ("16", "❌ Quitter", "Exit the program"),
+            ("16", "🌍 Cartes interactives", "Visualisation géographique avec points d’intérêt et heatmaps"),
+            ("17", "🔗 Graphiques de réseau", "Analyse des relations entre individus et organisations"),
+            ("18", "📊 Dashboards avec KPIs", "Visualisation chronologique et métriques des données OSINT"),
+            ("19", "❌ Quitter", "Exit the program"),
         ]
 
         for num, opt, desc in options:
@@ -528,6 +620,12 @@ def main_menu():
             invite_code = console.input("🔗 Entrez l'invitation du serveur Discord : ").strip()
             global_nitro_stat_server(invite_code)
         elif choix == "16":
+            create_map()
+        elif choix == "17":
+            create_network_graph()
+        elif choix == "18":
+            create_dashboard()
+        elif choix == "19":
             console.print("\n👋 À bientôt !", style="bold red")
             break
         else:
