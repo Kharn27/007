@@ -1,0 +1,9 @@
+requests
+thefuzz
+rich
+whois
+beautifulsoup4
+folium
+networkx
+matplotlib
+pandas
