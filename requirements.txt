@@ -1,9 +1,12 @@
 requests
 thefuzz
 rich
-whois
+python-whois
 beautifulsoup4
 folium
 networkx
 matplotlib
 pandas
+textblob
+pytesseract
+pillow

@@ -18,6 +18,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.pyplot as plt
+from textblob import TextBlob
+import pytesseract
+from PIL import Image
+
 
 console = Console()
 
@@ -534,6 +538,175 @@ def get_ip_location():
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
+def data_scraping_osint():
+    """ Scraping d’infos sur un sujet (Wikipedia + Google News) """
+    console.print("[cyan]🔍 Recherche OSINT sur un sujet[/cyan]")
+    query = console.input("🔎 Entrez un sujet : ").strip()
+
+    # Scraping Wikipedia
+    wiki_url = f"https://fr.wikipedia.org/wiki/{query.replace(' ', '_')}"
+    try:
+        response = requests.get(wiki_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        intro = soup.find("p").text
+        console.print(f"📄 Wikipedia : {intro[:300]}...\n🔗 {wiki_url}")
+    except:
+        console.print("❌ Impossible d'extraire Wikipedia.")
+
+    # Scraping Google News
+    news_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&tbm=nws"
+    console.print(f"📰 Articles sur Google News : {news_url}")
+
+
+
+def sentiment_analysis():
+    """ Analyse du sentiment d’un texte (positif, neutre, négatif) """
+    console.print("[cyan]💬 Analyse de Sentiment d’un texte[/cyan]")
+    text = console.input("📝 Entrez le texte à analyser : ")
+
+    analysis = TextBlob(text)
+    sentiment = analysis.sentiment.polarity
+
+    if sentiment > 0:
+        console.print("[green]✅ Sentiment positif.[/green]")
+    elif sentiment < 0:
+        console.print("[red]❌ Sentiment négatif.[/red]")
+    else:
+        console.print("[yellow]🔶 Sentiment neutre.[/yellow]")
+
+
+
+def identity_detection():
+    """ Vérifie si un pseudo est utilisé sur plusieurs sites """
+    console.print("[cyan]🎭 Détection d’identités multiples[/cyan]")
+    username = console.input("🔍 Entrez un pseudo : ").strip()
+
+    platforms = [
+        f"https://twitter.com/{username}",
+        f"https://github.com/{username}",
+        f"https://www.instagram.com/{username}/",
+        f"https://www.tiktok.com/@{username}",
+        f"https://www.reddit.com/user/{username}",
+    ]
+
+    for site in platforms:
+        response = requests.get(site)
+        if response.status_code == 200:
+            console.print(f"[green]✅ {username} existe sur {site}[/green]")
+        else:
+            console.print(f"[red]❌ {username} n’a pas été trouvé sur {site}[/red]")
+
+def time_analysis():
+    """ Analyse temporelle des tendances et événements """
+    console.print("[cyan]⏳ Time Analysis - Visualisation de l’évolution des tendances[/cyan]")
+
+    # Exemple de données temporelles
+    data = {
+        "Date": ["2024-01-01", "2024-02-01", "2024-03-01", "2024-04-01"],
+        "Mentions": [120, 150, 180, 240]
+    }
+
+    df = pd.DataFrame(data)
+    df["Date"] = pd.to_datetime(df["Date"])
+
+    plt.figure(figsize=(8,6))
+    plt.plot(df["Date"], df["Mentions"], marker='o', linestyle='-', color='blue')
+    plt.xlabel("Date")
+    plt.ylabel("Nombre de mentions")
+    plt.title("Évolution des tendances au fil du temps")
+    plt.grid()
+    plt.show()
+
+
+def social_network_analysis():
+    """ Analyse des connexions et influenceurs sur un réseau social """
+    console.print("[cyan]📊 Analyse avancée des réseaux sociaux[/cyan]")
+    
+    # Exemple de structure de réseau social
+    G = nx.Graph()
+    G.add_edges_from([
+        ("Alice", "Bob"),
+        ("Bob", "Charlie"),
+        ("Charlie", "David"),
+        ("David", "Eve"),
+        ("Eve", "Alice"),
+        ("Alice", "Charlie")
+    ])
+
+    plt.figure(figsize=(6,6))
+    nx.draw(G, with_labels=True, node_color="skyblue", edge_color="gray", font_weight="bold")
+    plt.title("Graphique des connexions sociales")
+    plt.show()
+
+    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+
+
+def article_search():
+    """ Recherche automatique d’articles et sources d’information fiables """
+    console.print("[cyan]🌎 Recherche automatique d’articles sur un sujet[/cyan]")
+    query = console.input("🔎 Entrez un sujet : ").strip()
+
+    # Recherche sur Wikipedia
+    wiki_url = f"https://fr.wikipedia.org/wiki/{query.replace(' ', '_')}"
+    try:
+        response = requests.get(wiki_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        intro = soup.find("p").text
+        console.print(f"📖 Wikipedia : {intro[:300]}...\n🔗 {wiki_url}")
+    except:
+        console.print("❌ Impossible d’extraire Wikipedia.")
+
+    # Recherche sur Google News
+    news_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&tbm=nws"
+    console.print(f"📰 Articles sur Google News : {news_url}")
+
+    # ✅ Ajout correct de la pause pour éviter le clear immédiat
+    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+
+
+
+def ocr_text_extraction():
+    """ Extraction de texte depuis une image """
+    console.print("[cyan]🖼️ OCR - Extraction de texte sur image[/cyan]")
+    image_path = console.input("📷 Entrez le chemin de l’image : ").strip()
+
+    text = pytesseract.image_to_string(Image.open(image_path))
+    console.print(f"📝 Texte extrait :\n{text}")
+
+
+def osint_alert_system():
+    """ Surveillance d’un sujet et alertes en temps réel (avec option de sortie) """
+    console.print("[cyan]🚨 OSINT Alert System - Suivi d’un sujet[/cyan]")
+    query = console.input("🔎 Entrez un sujet à surveiller (ou 'q' pour quitter) : ").strip()
+
+    if query.lower() == "q":
+        console.print("[red]❌ Surveillance annulée.[/red]")
+        return
+
+    news_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&tbm=nws"
+
+    while True:
+        console.print(f"🔍 Vérification des nouvelles infos sur {query}...")
+        response = requests.get(news_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        first_news = soup.find("h3")
+        if first_news:
+            console.print(f"⚠️ Nouvelle info : {first_news.text}")
+        else:
+            console.print("❌ Aucune info trouvée pour le moment.")
+
+        console.print("\n🛑 Tape 'q' et appuie sur Entrée pour quitter la surveillance...")
+        stop = console.input().strip()
+        if stop.lower() == "q":
+            console.print("[red]❌ Surveillance arrêtée.[/red]")
+            break
+
+        time.sleep(600)  # Vérifie toutes les 10 minutes
+
+
+
+
 def show_good_links():
     print_header()
     console.print("[bold cyan]\n====== Les Bons Liens ======[/bold cyan]\n")
@@ -549,10 +722,35 @@ def show_good_links():
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
+
+def print_pikachu():
+    """ Affiche le titre et un Pikachu stylisé en ASCII """
+    console.print(r"""
+[bold cyan]
+██╗  ██╗██╗███╗  ██╗ ██████╗     ██╗  ██╗██████╗  █████╗ ████████╗ ██████╗ ██████╗  █████╗ ██╗  ██╗
+██║ ██╔╝██║████╗ ██║██╔═══██╗    ██║ ██╔╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝ ██╔══██╗██╔══██╗╚██╗██╔╝
+█████╔╝ ██║██╔██╗██║██║   ██║    █████╔╝ ██████╔╝███████║   ██║   ██║  ██╗ ██████╔╝███████║ ╚███╔╝ 
+██╔═██╗ ██║██║╚████║██║   ██║    ██╔═██╗ ██╔═══╝ ██╔══██║   ██║   ██║  ╚██╗██╔═══╝ ██╔══██║ ██╔██╗ 
+██║  ██╗██║██║ ╚███║╚██████╔╝    ██║  ██╗██║     ██║  ██║   ██║   ╚██████╔╝██║     ██║  ██║██╔╝ ██╗
+╚═╝  ╚═╝╚═╝╚═╝  ╚══╝ ╚═════╝     ╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝
+[/bold cyan]
+[bold green]
+⢀⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣤⣤⣀⡀
+⠸⡇⠀⠿⡀⠀⠀⠀⣀⡴⢿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀
+⠀⠀⠀⠀⠑⢄⣠⠾⠁⣀⣄⡈⠙⣿⣿⣿⣿⣿⣿⣿⣿⣆
+⠀⠀⠀⠀⢀⡀⠁⠀⠀⠈⠙⠛⠂⠈⣿⣿⣿⣿⣿⠿⡿⢿⣆
+⠀⠀⠀⢀⡾⣁⣀⠀⠴⠂⠙⣗⡀⠀⢻⣿⣿⠭⢤⣀⣀⣠⣾
+⠀⠀⣴⣿⣿⣿⣿⣷⣶⣶⣶⣾⣥⣴⣿⣿⣿⣿⣿⣿⣿⣿⠇
+[/bold green]
+[bold red]🔍 KING KRATORAK - OSINT TOOL 🔍[/bold red]
+    """)
+
 def main_menu():
     while True:
-        clear_console()  # Nettoyage du terminal avant d'afficher le menu
+        clear_console()  # Nettoyage du terminal AVANT d'afficher le menu
+        print_pikachu()
         print_header()
+
         table = Table(title="🎬 007 OSINT TOOL MENU", style="cyan", box=box.ROUNDED)
         table.add_column("Numéro", justify="center", style="bold yellow")
         table.add_column("Option", justify="left", style="bold magenta")
@@ -577,7 +775,15 @@ def main_menu():
             ("16", "🌍 Cartes interactives", "Visualisation géographique avec points d’intérêt et heatmaps"),
             ("17", "🔗 Graphiques de réseau", "Analyse des relations entre individus et organisations"),
             ("18", "📊 Dashboards avec KPIs", "Visualisation chronologique et métriques des données OSINT"),
-            ("19", "❌ Quitter", "Exit the program"),
+            ("19", "📑 Data Scraping OSINT", "Extraction automatique d’infos publiques sur un sujet"),
+            ("20", "💬 Sentiment Analysis", "Analyse des émotions et tendances dans les textes"),
+            ("21", "🎭 Détection d’identités multiples", "Recherche d’un pseudo sur plusieurs plateformes"),
+            ("22", "🖼️ OCR (Reconnaissance de texte sur image)", "Extraction de texte depuis une image"),
+            ("23", "🚨 OSINT Alert System", "Surveillance et alertes sur un sujet clé"),
+            ("24", "📊 Analyse avancée des réseaux sociaux", "Détection des influenceurs et connexions entre groupes"),
+            ("25", "🌎 Recherche automatique d’articles", "Trouver et classer les sources d’information fiables"),
+            ("26", "⏳ Time Analysis", "Suivi de l’évolution des tendances et événements"),
+            ("27", "❌ Quitter", "Exit the program"),
         ]
 
         for num, opt, desc in options:
@@ -626,6 +832,30 @@ def main_menu():
         elif choix == "18":
             create_dashboard()
         elif choix == "19":
+            data_scraping_osint()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "20":
+            sentiment_analysis()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "21":
+            identity_detection()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "22":
+            ocr_text_extraction()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "23":
+            osint_alert_system()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "24":
+            social_network_analysis()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "25":
+            article_search()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "26":
+            time_analysis()
+            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
+        elif choix == "27":
             console.print("\n👋 À bientôt !", style="bold red")
             break
         else:
