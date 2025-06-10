@@ -21,7 +21,9 @@ import matplotlib.pyplot as plt
 from textblob import TextBlob
 import pytesseract
 from PIL import Image
-
+import webbrowser
+import geoip2.database
+import subprocess
 
 console = Console()
 
@@ -497,6 +499,7 @@ def discord_webhook_generator():
 
 def discord_server_info():
     """ Récupère les infos d'un serveur Discord via son lien d'invitation """
+
     print_header()
     console.print("[bold cyan]\n====== Discord Server Info ======[/bold cyan]")
 
@@ -516,48 +519,83 @@ def discord_server_info():
         console.print(f"👥 **Membres :** {member_count}")
         console.print(f"🟢 **Membres en ligne :** {online_count}")
 
+    elif response.status_code == 401:
+        console.print("[red]❌ Erreur : Token d’authentification invalide ou manquant.[/red]")
+    elif response.status_code == 404:
+        console.print("[red]❌ Erreur : Invitation invalide ou serveur introuvable.[/red]")
     else:
-        console.print("[red]❌ Erreur : Invitation invalide ou impossible d'obtenir les infos du serveur.[/red]")
+        console.print(f"[red]❌ Erreur inconnue ({response.status_code}).[/red]")
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
+
+import requests
+import subprocess
+import folium
+import webbrowser
+
+def scan_ports(ip):
+    console.print(f"🔍 Scan Nmap en cours pour {ip}...", style="bold yellow")
+    try:
+        result = subprocess.check_output(
+            ["nmap", "-Pn", "-F", ip],
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        console.print("\n🛡️ Résultat du scan Nmap :", style="bold cyan")
+        console.print(result)
+    except subprocess.CalledProcessError as e:
+        console.print(f"❌ Erreur lors du scan Nmap :\n{e.output}", style="bold red")
 
 def get_ip_location():
-    ip = console.input("💻 Entrez une adresse IP : ").strip()
-    console.print(f"\n📍 Géolocalisation de l'IP : [bold yellow]{ip}[/bold yellow]\n")
+    console.print("[cyan]📍 Géolocalisation IP via ipregistry.co après scan Nmap[/cyan]")
+    ip = console.input("🔎 Entrez l'adresse IP à analyser : ").strip()
 
-    r = requests.get(f"https://ipinfo.io/{ip}/json")
-    if r.status_code == 200:
-        data = r.json()
-        console.print(f"🏙️ Ville : {data.get('city', 'Inconnue')}")
-        console.print(f"🌎 Pays : {data.get('country', 'Inconnu')}")
-        console.print(f"🗺️ Région : {data.get('region', 'Inconnue')}")
-        console.print(f"📡 ISP : {data.get('org', 'Inconnu')}")
-    else:
-        console.print("[red]Impossible d'obtenir des infos sur l'IP.[/red]")
+    if not ip:
+        console.print("❌ IP invalide, réessaie.", style="bold red")
+        return
+
+    scan_ports(ip)  # 🔥 Étape 1 : Scan de ports
+
+    # 🔐 Clé API ipregistry
+    api_key = "ira_78qZAM7amNE8jXd8l54xiQU1RMvQsB0VyhOO"
+    url = f"https://api.ipregistry.co/{ip}?key={api_key}"
+
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+
+        loc = data["location"]
+        sec = data["security"]
+        company = data.get("company", {})
+        address = f"{loc['city']}, {loc['region']['name']}, {loc['postal']}, {loc['country']['name']}"
+
+        infos = {
+            "Ville": loc["city"],
+            "Code Postal": loc["postal"],
+            "Latitude": loc["latitude"],
+            "Longitude": loc["longitude"],
+            "Adresse (approximative)": address,
+            "Organisation": company.get("name", "N/A"),
+            "VPN / Proxy / TOR": "Oui" if sec["is_vpn"] or sec["is_proxy"] or sec["is_tor"] else "Non"
+        }
+
+        console.print("\n🌍 Informations géographiques :", style="bold cyan")
+        for key, val in infos.items():
+            console.print(f"🔹 {key}: {val}")
+
+        # 🗺️ Carte interactive
+        m = folium.Map(location=[loc["latitude"], loc["longitude"]], zoom_start=13)
+        folium.Marker([loc["latitude"], loc["longitude"]], popup=address, tooltip="📍 Cible estimée").add_to(m)
+        m.save("geo_ip_map.html")
+        webbrowser.open("geo_ip_map.html")
+        console.print("\n🗺️ Carte ouverte dans le navigateur", style="bold green")
+
+    except Exception as e:
+        console.print(f"❌ Erreur : {e}", style="bold red")
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
-
-def data_scraping_osint():
-    """ Scraping d’infos sur un sujet (Wikipedia + Google News) """
-    console.print("[cyan]🔍 Recherche OSINT sur un sujet[/cyan]")
-    query = console.input("🔎 Entrez un sujet : ").strip()
-
-    # Scraping Wikipedia
-    wiki_url = f"https://fr.wikipedia.org/wiki/{query.replace(' ', '_')}"
-    try:
-        response = requests.get(wiki_url)
-        soup = BeautifulSoup(response.text, "html.parser")
-        intro = soup.find("p").text
-        console.print(f"📄 Wikipedia : {intro[:300]}...\n🔗 {wiki_url}")
-    except:
-        console.print("❌ Impossible d'extraire Wikipedia.")
-
-    # Scraping Google News
-    news_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&tbm=nws"
-    console.print(f"📰 Articles sur Google News : {news_url}")
-
-
 
 def sentiment_analysis():
     """ Analyse du sentiment d’un texte (positif, neutre, négatif) """
@@ -821,7 +859,7 @@ def main_menu():
         elif choix == "4":
             check_url_vt()
         elif choix == "5":
-            get_ip_location()
+            get_ip_location()  # ✅ Géolocalisation IP réactivée sans message temporaire
         elif choix == "6":
             ip_generator()
         elif choix == "7":
@@ -852,28 +890,20 @@ def main_menu():
             create_dashboard()
         elif choix == "19":
             data_scraping_osint()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "20":
             sentiment_analysis()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "21":
             identity_detection()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "22":
             ocr_text_extraction()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "23":
             osint_alert_system()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "24":
             social_network_analysis()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "25":
             article_search()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "26":
             time_analysis()
-            console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")  # Pause après exécution
         elif choix == "27":
             console.print("\n👋 À bientôt !", style="bold red")
             break
