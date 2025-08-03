@@ -1,0 +1,17 @@
+pip install requests
+pip install colorama
+pip install beautifulsoup4
+pip install lxml
+pip install python-whois
+pip install ipwhois
+pip install shodan
+pip install virustotal-python
+pip install geopy
+pip install folium
+pip install matplotlib
+pip install pandas
+pip install Pillow
+pip install discord-webhook
+pip install dnspython
+pip install opencv-python
+pip install nmap
