@@ -1,81 +1,45 @@
-# 🕵️ 007 OSINT — Outil d’investigation numérique avancé
+# 🕵️ 007 OSINT — Advanced Digital Investigation Framework
 
-**007 OSINT** est un outil open-source développé en Python, conçu pour l’analyse d’informations publiques (OSINT — Open Source Intelligence). Il centralise plus de 25 modules puissants pour la cybersécurité, la veille, la cartographie d’informations et l’automatisation de recherches en ligne.
+**007 OSINT** is a professional-grade, open-source Python toolkit for Open Source Intelligence (OSINT), digital forensics, and cybersecurity research. It unifies 25+ advanced modules for reconnaissance, automation, mapping, and data analysis — all in one sleek interface.
 
-> 🔐 Usage réservé à des fins légales, éducatives et de cybersécurité.
-
----
-
-## 🚀 Fonctionnalités
-
-### 🎯 Modules principaux
-
-| ID  | Module                                         | Description |
-|-----|------------------------------------------------|-------------|
-| 1   | Vérification multi-réseaux sociaux             | Recherche de pseudonymes sur plusieurs plateformes |
-| 2   | Recherche de films et séries                   | Identification de sources de streaming légales |
-| 3   | WHOIS & DNS Lookup                             | Détails sur les domaines internet |
-| 4   | Vérification d’URL avec VirusTotal             | Détection de liens suspects |
-| 5   | Géolocalisation IP via Nmap + IPRegistry       | Localisation approximative d’une IP |
-| 6   | Générateur d’adresses IP avec envoi Discord    | Génère des IPs fictives et envoie un message via webhook |
-| 7   | Répertoire de sites OSINT utiles               | Accès rapide à des outils externes |
-| 8   | Scanner de vulnérabilités Web                  | Scan des failles web de base |
-| 9-15| Outils Discord avancés                         | Analyse de comptes, webhooks et Nitro Boosts |
-| 16+ | Visualisation interactive, OCR, Dashboard, Alerting, Network Graphs, Scraping, etc. |
-
----
-
-## 🛠️ Installation
-
-### 1. Prérequis
-
-- Python 3.9+
-- Windows, Linux ou macOS
-- [Nmap](https://nmap.org/download.html) installé et accessible via `nmap` dans votre terminal
-- (Recommandé) [Npcap](https://nmap.org/npcap/) pour une meilleure détection sur Windows
-
-### 2. Cloner le dépôt
-
-```bash
-git clone https://github.com/tonpseudo/007-osint.git
-cd 007-osint
-pip install -r requirements.txt
-python 007.py
-007-osint/
-├── 007.py               # Fichier principal
-├── modules/             # (Optionnel) Code modulaire par fonctionnalité
-├── assets/              # Logos, bannières, icônes
-├── requirements.txt     # Dépendances Python
-└── README.md            # Ce fichier
-  
-
-in UK version 
-
-
-# 🕵️ 007 OSINT — Advanced Open Source Intelligence Framework
-
-**007 OSINT** is a powerful, open-source intelligence tool built with Python. It brings together over 25 modules focused on digital investigation, cybersecurity research, network analysis, and automated information retrieval.
-
-> 🔐 Intended for ethical, educational, and professional cybersecurity use only.
+> ⚠️ **For legal, ethical, and educational use only.**  
+> Misuse is strictly prohibited. The author assumes no liability for illegal activities.
 
 ---
 
 ## 🚀 Features
 
-### 🎯 Core Modules
+### Core Capabilities
 
-| ID  | Module                                         | Description |
-|-----|------------------------------------------------|-------------|
-| 1   | Social Media Username Checker                  | Search usernames across multiple platforms |
-| 2   | Movie & Series OSINT                           | Search for streaming availability on legal platforms |
-| 3   | WHOIS & DNS Lookup                             | Gather domain and DNS info |
-| 4   | URL Scanner via VirusTotal                     | Detect malicious or suspicious links |
-| 5   | IP Geolocation with Nmap + IPRegistry          | Approximate location of IP address |
-| 6   | IP Generator with Discord Webhook Sender       | Generate fake IPs and send them to Discord |
-| 7   | Useful OSINT Links                             | Quick access to third-party investigation tools |
-| 8   | Website Vulnerability Scanner                  | Basic web security scanner |
-| 9–15| Advanced Discord Tools                         | Extract account info, webhook analysis, Nitro stat |
-| 16+ | Interactive Maps, OCR, Dashboards, Alerts, Graphs, Scraping, and more |
+| ID  | Module Name                        | Description |
+|-----|------------------------------------|-------------|
+| 01  | Social Media Username Checker      | Search for usernames across dozens of platforms |
+| 02  | Movie & Series OSINT               | Find legal streaming sources for films/series |
+| 03  | WHOIS & DNS Lookup                 | Gather domain registration and DNS info |
+| 04  | URL Scanner (VirusTotal)           | Detect malicious or suspicious links |
+| 05  | IP Geolocation (Nmap + IPRegistry) | Locate IP addresses and scan open ports |
+| 06  | IP Generator + Discord Webhook     | Generate fake IPs and send via Discord |
+| 07  | Useful OSINT Links                 | Curated directory of investigation tools |
+| 08  | Website Vulnerability Scanner      | Scan for basic web vulnerabilities |
+| 09  | Data Scraping OSINT                | Automated extraction of public data |
+| 10  | Article Search                     | Find and classify reliable news sources |
+| 11  | Identity Multiplicity Detection    | Check if a username exists on multiple sites |
+| 12  | Advanced Discord Tools             | Account info, webhook analysis, Nitro stats |
+| 13  | Interactive Maps                   | Visualize geodata and heatmaps |
+| 14  | Network Graphs                     | Analyze relationships/networks visually |
+| 15  | Dashboards & KPIs                  | Chronological and metric data visualization |
+| 16  | OCR (Image Text Extraction)        | Extract text from images (Tesseract) |
+| 17  | Sentiment Analysis                 | Detect emotions and trends in text |
+| 18  | Time Analysis                      | Track evolution of events and trends |
+| 19  | OSINT Alert System                 | Automated monitoring and alerts |
+| 20  | ...and many more!                  | See the full menu in the tool |
+
+---
+
+## 🖥️ Screenshots
+
+![Menu Screenshot](assets/menu_screenshot.png)
+![Map Example](assets/map_example.png)
 
 ---
 
@@ -83,35 +47,76 @@ in UK version
 
 ### 1. Requirements
 
-- Python 3.9+
-- Works on Windows, Linux, or macOS
-- [Nmap](https://nmap.org/download.html) installed and added to your system PATH
-- (Recommended for Windows) [Npcap](https://nmap.org/npcap/) for enhanced IP scanning
+- **Python 3.9+**
+- Windows, Linux, or macOS
+- [Nmap](https://nmap.org/download.html) (must be in your system PATH)
+- (Windows recommended) [Npcap](https://nmap.org/npcap/) for advanced scanning
 
-### 2. Clone the Repository
+### 2. Setup
 
 ```bash
 git clone https://github.com/yourusername/007-osint.git
 cd 007-osint
-
-pip install -r requirements.txt
-
-
+pip install .
 python 007.py
+```
 
+---
 
+## 📂 Project Structure
+
+```
 007-osint/
-├── 007.py               # Main script
-├── modules/             # (Optional) Modular code per functionality
-├── assets/              # Logos, icons, banners
+├── 007.py               # Main script (launch this)
+├── modules/             # (Optional) Modular code per feature
+├── assets/              # Logos, screenshots, banners
 ├── requirements.txt     # Python dependencies
+├── setup.py             # Install script
 └── README.md            # This file
+```
 
-🔒 Legal Notice
-This tool is provided for educational and lawful security research only. Any misuse is strictly prohibited. The author takes no responsibility for malicious usage.
+---
 
+## ⚡ Quick Start
 
-👤 Author
-Kratorak / LOVE B. Verly
-📧 Contact: matroxxor@protonmail.com
-💻 Cybersecurity enthusiast & OSINT researcher
+1. **Clone the repo** and install dependencies as above.
+2. **Run** `python 007.py`
+3. **Choose a module** from the interactive menu.
+4. **Investigate responsibly!**
+
+---
+
+## 🧑‍💻 Author
+
+- **Kratorak / LOVE B. Verly**
+- 📧 [matroxxor@protonmail.com](mailto:matroxxor@protonmail.com)
+- 💻 Cybersecurity enthusiast & OSINT researcher
+
+---
+
+## 🔒 Legal Notice
+
+This tool is provided for educational and lawful security research only.  
+**Any misuse is strictly forbidden.**  
+The author takes no responsibility for malicious or illegal use.
+
+---
+
+## ⭐️ Contributing
+
+Pull requests, bug reports, and suggestions are welcome!  
+Feel free to fork and improve the project.
+
+---
+
+## 🌐 Links
+
+- [Nmap Download](https://nmap.org/download.html)
+- [Npcap for Windows](https://nmap.org/npcap/)
+- [Python Download](https://www.python.org/downloads/)
+- [VirusTotal](https://www.virustotal.com/)
+- [Awesome OSINT](https://github.com/jivoi/awesome-osint)
+
+---
+
+> _“The best way to predict the future is to invent it.”_

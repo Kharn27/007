@@ -24,6 +24,7 @@ from PIL import Image
 import webbrowser
 import geoip2.database
 import subprocess
+import shutil
 
 console = Console()
 
@@ -181,10 +182,7 @@ def get_watch_providers(media_type, tmdb_id, country="FR"):
     return [p["provider_name"] for p in providers]
 
 def print_header():
-    title = Text("007 OSINT", style="bold red", justify="center")
-    subtitle = Text("Created by KRATORAK", style="italic green", justify="center")
-    panel = Panel(Align.center(Text.assemble(title, "\n", subtitle)), style="bold blue", box=box.DOUBLE)
-    console.print(panel)
+    pass  # Désactive l'affichage du header stylisé
 
 def clear_console():
     """Efface le terminal pour un affichage propre"""
@@ -315,7 +313,7 @@ def social_check_tool():
 
 def generate_random_ip():
     """Génère une adresse IPv4 aléatoire"""
-    return f"{random.randint(1, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+    return f"{random.randint(1, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 255)}"
 
 
 def get_valid_ip():
@@ -583,7 +581,7 @@ def get_ip_location():
 
         console.print("\n🌍 Informations géographiques :", style="bold cyan")
         for key, val in infos.items():
-            console.print(f"🔹 {key}: {val}")
+            console.print(f"🔹 {key:20}: {val}")
 
         # 🗺️ Carte interactive
         m = folium.Map(location=[loc["latitude"], loc["longitude"]], zoom_start=13)
@@ -760,136 +758,37 @@ def show_good_links():
 
     console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
 
+def get_terminal_size():
+    return shutil.get_terminal_size((80, 20))
 
-def main_menu():
-    while True:
-        clear_console()  # Nettoyage du terminal AVANT d'afficher le menu
-        print_header()
-
-        table = Table(title="🎬 007 OSINT TOOL MENU", style="bold red", box=box.ROUNDED)
-        table.add_column("Numéro", justify="center", style="bold red")
-        table.add_column("Option", justify="left", style="bold red")
-        table.add_column("Description", style="bold red")
-
-        options = [
-            ("1", "🔎 Vérification multi-réseaux sociaux", "Check usernames across social platforms"),
-            ("2", "🎥 OSINT FILM ET SÉRIE", "Recherche films et séries avec plateformes légales"),
-            ("3", "🌐 WHOIS & DNS Lookup", "Obtenir infos sur un domaine"),
-            ("4", "🦠 Vérification URL", "Analyse de site web avec VirusTotal"),
-            ("5", "📍 Géolocalisation IP", "Trouver l'emplacement d'une adresse IP"),
-            ("6", "⚡ IP GENERATOR", "Génère plusieurs IP et les envoie sur Discord"),
-            ("7", "🌍 Les Bons Liens", "Accès rapide aux sites utiles"),
-            ("8", "🛡 Website Vulnerability Scanner", "Analyse la sécurité d’un site web"),
-            ("9", "🚀 Nitro Stats", "Analyse le nombre de Nitro Boosters d'un serveur"),
-            ("10", "🛡 Discord Token Info", "Affiche des infos d’un compte Discord"),
-            ("11", "🔗 Discord Webhook Info", "Affiche des infos d’un webhook Discord"),
-            ("12", "⚙️ Discord Webhook Generator", "Permet d’envoyer un message avec un webhook"),
-            ("13", "🏰 Discord Server Info", "Affiche les infos détaillées d’un serveur via une invitation"),
-            ("14", "💎 Nitro Global Stats", "Estimation du nombre de Nitro dans le monde"),
-            ("15", "📊 Global Nitro Stat Serveur", "Liste les membres Nitro d'un serveur avec leur rang"),
-            ("16", "🌍 Cartes interactives", "Visualisation géographique avec points d’intérêt et heatmaps"),
-            ("17", "🔗 Graphiques de réseau", "Analyse des relations entre individus et organisations"),
-            ("18", "📊 Dashboards avec KPIs", "Visualisation chronologique et métriques des données OSINT"),
-            ("19", "📑 Data Scraping OSINT", "Extraction automatique d’infos publiques sur un sujet"),
-            ("20", "💬 Sentiment Analysis", "Analyse des émotions et tendances dans les textes"),
-            ("21", "🎭 Détection d’identités multiples", "Recherche d’un pseudo sur plusieurs plateformes"),
-            ("22", "🖼️ OCR (Reconnaissance de texte sur image)", "Extraction de texte depuis une image"),
-            ("23", "🚨 OSINT Alert System", "Surveillance et alertes sur un sujet clé"),
-            ("24", "📊 Analyse avancée des réseaux sociaux", "Détection des influenceurs et connexions entre groupes"),
-            ("25", "🌎 Recherche automatique d’articles", "Trouver et classer les sources d’information fiables"),
-            ("26", "⏳ Time Analysis", "Suivi de l’évolution des tendances et événements"),
-            ("27", "❌ Quitter", "Exit the program"),
-        ]
-
-        for num, opt, desc in options:
-            table.add_row(num, opt, desc)
-
-        console.print(table)
-
-        choix = console.input("[bold red]🧠 Choisis un numéro : [/bold red]").strip()
-
-        if choix == "1":
-            social_check_tool()
-        elif choix == "2":
-            osint_film_serie()
-        elif choix == "3":
-            get_domain_info()
-        elif choix == "4":
-            check_url_vt()
-        elif choix == "5":
-            get_ip_location()  # ✅ Géolocalisation IP réactivée sans message temporaire
-        elif choix == "6":
-            ip_generator()
-        elif choix == "7":
-            show_good_links()
-        elif choix == "8":
-            website_vulnerability_scanner()
-        elif choix == "9":
-            invite_code = console.input("🔗 Entrez le code d'invitation du serveur Discord : ").strip()
-            get_nitro_boosters(invite_code)
-        elif choix == "10":
-            discord_token_info()
-        elif choix == "11":
-            discord_webhook_info()
-        elif choix == "12":
-            discord_webhook_generator()
-        elif choix == "13":
-            discord_server_info()
-        elif choix == "14":
-            get_nitro_global_stats()
-        elif choix == "15":
-            invite_code = console.input("🔗 Entrez l'invitation du serveur Discord : ").strip()
-            global_nitro_stat_server(invite_code)
-        elif choix == "16":
-            create_map()
-        elif choix == "17":
-            create_network_graph()
-        elif choix == "18":
-            create_dashboard()
-        elif choix == "19":
-            data_scraping_osint()
-        elif choix == "20":
-            sentiment_analysis()
-        elif choix == "21":
-            identity_detection()
-        elif choix == "22":
-            ocr_text_extraction()
-        elif choix == "23":
-            osint_alert_system()
-        elif choix == "24":
-            social_network_analysis()
-        elif choix == "25":
-            article_search()
-        elif choix == "26":
-            time_analysis()
-        elif choix == "27":
-            console.print("\n👋 À bientôt !", style="bold red")
-            break
-        else:
-            console.print("❌ Choix invalide, réessaie.\n", style="bold red")
+def center_text_vertically(content: str) -> str:
+    """
+    Centre verticalement un texte dans le terminal.
+    """
+    lines = content.strip('\n').split('\n')
+    term_height = get_terminal_size().lines
+    padding = max(0, (term_height - len(lines)) // 2)
+    return "\n" * padding + "\n".join(lines)
 
 def spiderman_intro():
-    console.clear()
-    console.print(r"""
-[bold red]
-
-                                        ⠀⠀⠀⠀⠀⠀⠀⢀⠆⠀⢀⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡀⠀⠰⡀⠀⠀⠀⠀⠀⠀⠀
+    spider_art = r"""
+[bold]
+  ⠀⠀⠀⠀⠀⠀                                       ⠀⢀⠆⠀⢀⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡀⠀⠰⡀⠀⠀⠀⠀⠀⠀⠀
                                         ⠀⠀⠀⠀⠀⠀⢠⡏⠀⢀⣾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢷⡀⠀⢹⣄⠀⠀⠀⠀⠀⠀
                                         ⠀⠀⠀⠀⠀⣰⡟⠀⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣧⠀⠀⢻⣆⠀⠀⠀⠀⠀
-                                        ⠀⠀⠀⠀⢠⣿⠁⠀⣸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣇⠀⠈⣿⡆⠀⠀⠀⠀
-                                        ⠀⠀⠀⠀⣾⡇⠀⢀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡀⠀⢸⣿⠀⠀⠀⠀
-                                        ⠀⠀⠀⢸⣿⠀⠀⣸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣇⠀⠀⣿⡇⠀⠀⠀
-                                        ⠀⠀⠀⣿⣿⠀⠀⣿⣿⣧⣤⣤⣤⡀⠀⣀⠀⠀⣀⠀⢀⣤⣤⣤⣤⣤⣤⣤⣤⣼⣿⣿⠀⠀⣿⣿⠀⠀⠀
-                                        ⠀⠀⢸⣿⡏⠀⠀⠀⠙⢉⣉⣩⣴⣶⣤⣙⣿⣶⣯⣦⣴⣼⣷⣿⣋⣤⣶⣦⣍⣉⠉⠋⠀⠀⠀⢸⣿⡇⠀⠀
-                                       ⠀⠀⢿⣿⣷⣤⣶⣶⠿⠿⠛⠋⣉⡉⠙⢛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡛⠛⢉⣉⠙⠛⠿⠿⣶⣶⣾⣿⡿⠀⠀
-                                       ⠀⠀⠀⠙⠻⠋⠉⠀⠀⠀⣠⣾⡿⠟⠛⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⠛⠻⢿⣷⣄⠀⠀⠀⠉⠙⠟⠋⠀⠀⠀
-                                       ⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⠿⠋⢀⣠⣾⠟⢫⣿⣿⣿⣿⣿⣿⣿⡍⠻⣷⣄⡀⠙⠿⣷⣤⡀⠀⠀⠀⠀⠀⠀⠀
-                                       ⠀⠀⠀⠀⠀⣠⣴⡿⠛⠁⠀⢸⣿⣿⠋⠀⢸⣿⣿⣿⣿⣿⣿⣿⡗⠀⠙⣿⣿⡇⠀⠈⠛⢿⣦⣄⠀⠀⠀⠀⠀
-                                       ⢀⠀⣀⣴⣾⠟⠋⠀⠀⠀⠀⢸⣿⣿⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠙⠻⣷⣦⣀⠀⣀
-                                       ⢸⣿⣿⠋⠁⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠈⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠈⠙⣿⣿⡟
-                                       ⢸⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⢹⣿⣿⣿⣿⣿⡏⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡇
-                                       ⢸⣿⣷⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⢿⣿⣿⡿⠀⠀⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡇
-                                       ⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⠈⠿⠿⠁⠀⠀⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀
+                                         ⠀⠀⠀⠀⢠⣿⠁⠀⣸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣇⠀⠈⣿⡆⠀⠀⠀⠀
+                                        ⠀ ⠀⠀⠀⣾⡇⠀⢀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡀⠀⢸⣿⠀⠀⠀⠀
+                                        ⠀⠀ ⠀⢸⣿⠀⠀⣸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣇⠀⠀⣿⡇⠀⠀⠀
+                                          ⠀⠀⠀⣿⣿⠀⠀⣿⣿⣧⣤⣤⣤⡀⠀⣀⠀⠀⣀⠀⢀⣤⣤⣤⣤⣤⣤⣤⣤⣼⣿⣿⠀⠀⣿⣿⠀⠀⠀
+                                         ⠀⠀⢸⣿⡏⠀⠀⠀⠙⢉⣉⣩⣴⣶⣤⣙⣿⣶⣯⣦⣴⣼⣷⣿⣋⣤⣶⣦⣍⣉⠉⠋⠀⠀⠀⢸⣿⡇⠀⠀
+                                    ⠀⠀⢿⣿⣷⣤⣶⣶⠿⠿⠛⠋⣉⡉⠙⢛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡛⠛⢉⣉⠙⠛⠿⠿⣶⣶⣾⣿⡿⠀⠀
+                                        ⠀⠀⠀⠙⠻⠋⠉⠀⠀⠀⣠⣾⡿⠟⠛⣻⣿⣿⣿⣿⣿⣿⣿⣿⣟⠛⠻⢿⣷⣄⠀⠀⠀⠉⠙⠟⠋⠀⠀⠀
+                                        ⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⠿⠋⢀⣠⣾⠟⢫⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠈⠛⢿⣦⣄⠀⠀⠀⠀⠀
+                                         ⠀⠀⠀⠀⠀⣠⣴⡿⠛⠁⠀⢸⣿⣿⠋⠀⢸⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠙⠻⣷⣦⣀⠀⣀
+                                       ⠀⠀⢀⠀⣀⣴⣾⠟⠋⠀⠀⠀⠀⣿⣿⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠈⠙⣿⣿⡟
+                                       ⢸⣿⣿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠈⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡇
+                                       ⢸⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⢹⣿⣿⣿⣿⣿⡏⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡇
+                                       ⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⢿⣿⣿⡿⠀⠀⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀
                                         ⠀⢻⣿⡄⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠇⠀⠀⠀⠀⠀⠀⠀⢀⣿⡟⠀
                                         ⠀⠘⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡿⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠃⠀
                                         ⠀⠀⠸⣷⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⣾⠏⠀⠀
@@ -899,13 +798,186 @@ def spiderman_intro():
                                         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⡆⠀⠀⠀⠀⠀⠀⠀⠀⢸⡟⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀
                                         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠣⠀⠀⠀⠀⠀⠀⠀⠀⠜⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
                                                        (loading..)
+[/bold]
+"""
 
+    for i in range(10):
+        color = "green" if i % 2 == 0 else "red"
+        console.clear()
+        centered_spider = center_text_vertically(spider_art)
+        console.print(centered_spider, style=f"bold {color}")
+        time.sleep(0.5)
+    console.clear()
 
+def show_startup_banner():
+    banner = r"""
+                                     ,----,                                   ,----,                       
+                                   .'   .`|                                 ,/   .`|                  
+    ,----..       ,----..       .'   .'   ;            ,---,.    ,---,    ,`   .'  : ,----..        
+   /   /   \     /   /   \    ,---, '    .'          ,'  .'  \,`--.' |  ;    ;     //   /   \    
+  /   .     :   /   .     :   |   :     ./         ,---.' .' ||   :  :.'___,/    ,'|   :     :,---.'|  : ' 
+ .   /   ;.  \ .   /   ;.  \  ;   | .'  /          |   |  |: |:   |  '|    :     | .   |  ;. /|   | : _' | 
+.   ;   /  ` ;.   ;   /  ` ;  `---' /  ;           :   :  :  /|   :  |;    |.';  ; .   ; /--` :   : |.'  | 
+;   |  ; \ ; |;   |  ; \ ; |    /  ;  /            :   |    ; '   '  ;`----'  |  | ;   | ;    |   ' '  ; : 
+|   :  | ; | '|   :  | ; | '   ;  /  /             |   :     \|   |  |    '   :  ; |   : |    '   |  .'. | 
+.   |  ' ' ' :.   |  ' ' ' :  /  /  /              |   |   . |'   :  ;    |   |  ' .   | '___ |   | :  | ' 
+'   ;  \; /  |'   ;  \; /  |./__;  /               '   :  '; ||   |  '    '   :  | '   ; : .'|'   : |  : ; 
+ \   \  ',  /  \   \  ',  / |   : /                |   |  | ; '   :  |    ;   |.'  '   | '/  :|   | '  ,/  
+  ;   :    /    ;   :    /  ;   |/                 |   :   /  ;   |.'     '---'    |   :    / ;   : ;--'   
+   \   \ .'      \   \ .'   `---'                  |   | ,'   '---'                 \   \ .'  |   ,/       
+    `---`         `---`                            `----'                            `---`    '---'        
+    """
+    console.clear()
+    centered_banner = center_text_vertically(banner)
+    console.print(f"[bold green]{centered_banner}[/bold green]")
+    console.print("\n[bold green]Appuie sur Entrée pour lancer le MultiTool...[/bold green]", justify="center")
+    console.input()
 
-[/bold red]
-    """, style="bold red")
-    time.sleep(2)
+def main_menu():
+    clear_console()
+    print_header()
+
+    # Sections
+    categories = {
+        "─ SÉCURITÉ & RÉSEAUX ─": [
+            ("01", "Website Vulnerability Scanner"),
+            ("02", "WHOIS & DNS Lookup"),
+            ("03", "URL Scanner (VirusTotal)"),
+            ("04", "IP Scanner"),
+            ("05", "IP Port Scanner"),
+            ("06", "IP Geolocalisation"),
+            ("07", "IP Generator"),
+            ("08", "Data Scraping OSINT"),
+            ("09", "Recherche d’articles"),
+        ],
+        "─ OSINT & ANALYSE ─": [
+            ("10", "OSINT Film & Série"),
+            ("11", "Détection d’identités multiples"),
+            ("12", "Vérification multi-réseaux sociaux"),
+            ("13", "Dashboards avec KPIs"),
+            ("14", "Cartes interactives"),
+            ("15", "Graphiques de réseau"),
+            ("16", "Analyse avancée réseaux sociaux"),
+            ("17", "Sentiment Analysis"),
+            ("18", "Time Analysis"),
+        ],
+        "─ DISCORD & UTILITAIRES ─": [
+            ("19", "Nitro Stats"),
+            ("20", "Nitro Global Stats"),
+            ("21", "Global Nitro Stat Serveur"),
+            ("22", "Discord Token Info"),
+            ("23", "Discord Webhook Info"),
+            ("24", "Discord Webhook Generator"),
+            ("25", "Discord Server Info"),
+            ("26", "OCR (Texte sur image)"),
+            ("27", "Les Bons Liens"),
+            ("28", "OSINT Alert System"),
+            ("29", "Quitter"),
+        ]
+    }
+
+    sep = "[bold green]" + "═" * 100 + "[/bold green]"
+    console.print(sep)
+    console.print("[bold underline green]🛠️  MENU PRINCIPAL - MULTI TOOL OSINT[/bold underline green]", justify="center")
+    console.print(sep)
+
+    # Affichage en 3 colonnes équilibrées
+    from rich.table import Table
+    table = Table(show_header=False, box=None, expand=True, pad_edge=False)
+
+    # Ajouter 3 colonnes
+    table.add_column(justify="left")
+    table.add_column(justify="left")
+    table.add_column(justify="left")
+
+    # Regroupe les items par catégorie
+    left = categories["─ SÉCURITÉ & RÉSEAUX ─"]
+    middle = categories["─ OSINT & ANALYSE ─"]
+    right = categories["─ DISCORD & UTILITAIRES ─"]
+
+    max_len = max(len(left), len(middle), len(right))
+    for i in range(max_len):
+        l = f"[bold green]{left[i][0]}[/bold green] {left[i][1]}" if i < len(left) else ""
+        m = f"[bold green]{middle[i][0]}[/bold green] {middle[i][1]}" if i < len(middle) else ""
+        r = f"[bold green]{right[i][0]}[/bold green] {right[i][1]}" if i < len(right) else ""
+        table.add_row(l, m, r)
+
+    console.print(table)
+    console.print(sep)
+    console.print("[bold green]Tape le numéro de l'option puis appuie sur Entrée :[/bold green]")
+
+    # Menu interactif
+    while True:
+        choix = console.input("[bold green]👉 Numéro de l'option : [/bold green]").strip().zfill(2)
+        clear_console()
+        # Gestion des options
+        if choix == "01":
+            website_vulnerability_scanner()
+        elif choix == "02":
+            get_domain_info()
+        elif choix == "03":
+            check_url_vt()
+        elif choix == "04":
+            get_ip_location()
+        elif choix == "05":
+            scan_ports(console.input("IP à scanner : ").strip())
+        elif choix == "06":
+            get_ip_location()
+        elif choix == "07":
+            ip_generator()
+        elif choix == "08":
+            data_scraping_osint()
+        elif choix == "09":
+            article_search()
+        elif choix == "10":
+            osint_film_serie()
+        elif choix == "11":
+            identity_detection()
+        elif choix == "12":
+            social_check_tool()
+        elif choix == "13":
+            create_dashboard()
+        elif choix == "14":
+            create_map()
+        elif choix == "15":
+            create_network_graph()
+        elif choix == "16":
+            social_network_analysis()
+        elif choix == "17":
+            sentiment_analysis()
+        elif choix == "18":
+            time_analysis()
+        elif choix == "19":
+            invite_code = console.input("Code d'invitation Discord : ").strip()
+            get_nitro_boosters(invite_code)
+        elif choix == "20":
+            get_nitro_global_stats()
+        elif choix == "21":
+            invite_code = console.input("Invitation Discord : ").strip()
+            global_nitro_stat_server(invite_code)
+        elif choix == "22":
+            discord_token_info()
+        elif choix == "23":
+            discord_webhook_info()
+        elif choix == "24":
+            discord_webhook_generator()
+        elif choix == "25":
+            discord_server_info()
+        elif choix == "26":
+            ocr_text_extraction()
+        elif choix == "27":
+            show_good_links()
+        elif choix == "28":
+            osint_alert_system()
+        elif choix == "29":
+            console.print("\n[bold green]👋 A bientôt, merci d'avoir utilisé le MultiTool OSINT ![/bold green]")
+            break
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
 
 if __name__ == "__main__":
+    console.clear()
+    show_startup_banner()
+    console.print("[bold green]Bienvenue dans le MultiTool OSINT ![/bold green]")   
     spiderman_intro()
     main_menu()

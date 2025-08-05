@@ -1,17 +1,33 @@
-pip install requests
-pip install colorama
-pip install beautifulsoup4
-pip install lxml
-pip install python-whois
-pip install ipwhois
-pip install shodan
-pip install virustotal-python
-pip install geopy
-pip install folium
-pip install matplotlib
-pip install pandas
-pip install Pillow
-pip install discord-webhook
-pip install dnspython
-pip install opencv-python
-pip install nmap
+from setuptools import setup, find_packages
+
+setup(
+    name="007-osint-tool",
+    version="1.0.0",
+    description="Outil OSINT multifonction (Discord, IP, scraping, analyse, etc.)",
+    author="KRATORAK",
+    packages=find_packages(),
+    install_requires=[
+        "requests",
+        "colorama",
+        "beautifulsoup4",
+        "lxml",
+        "python-whois",
+        "ipwhois",
+        "shodan",
+        "virustotal-python",
+        "geopy",
+        "folium",
+        "matplotlib",
+        "pandas",
+        "Pillow",
+        "discord-webhook",
+        "dnspython",
+        "opencv-python",
+        "nmap",
+        "thefuzz",
+        "rich",
+        "textblob",
+        "pytesseract",
+    ],
+    python_requires=">=3.8",
+)
