@@ -66,7 +66,7 @@ def get_nitro_global_stats():
     console.print(f"💎 **Nitro Basic :** ~{nitro_basic:,} abonnés")
     console.print(f"🚀 **Nitro Premium :** ~{nitro_premium:,} abonnés")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def create_map():
     """ Génère une carte interactive avec des points géolocalisés """
@@ -148,7 +148,7 @@ def global_nitro_stat_server(invite_code):
     else:
         console.print("[red]❌ Erreur : Impossible d'obtenir les infos du serveur.[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 def search_titles_approximate(query, media_type="movie", limit=10):
@@ -236,7 +236,7 @@ def website_vulnerability_scanner():
     except requests.exceptions.RequestException as e:
         console.print(f"[red]❌ Erreur lors de l'analyse : {e}[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 def social_check_tool():
@@ -343,7 +343,7 @@ def ip_generator():
     webhook_url = console.input("\n🔗 Entrez votre webhook Discord : ").strip()
 
     # Nombre d'IP à générer
-    num_ips = console.input("💻 Combien d'IP veux-tu générer ? ").strip()
+    num_ips = console.input("💻 Combien d'IP veux-tu générer ? ")
 
     try:
         num_ips = int(num_ips)
@@ -405,7 +405,7 @@ def osint_film_serie():
     if not movies and not series:
         console.print("[red]Aucun résultat trouvé pour votre recherche.[/red]")
 
-    console.input("\n🔄 Appuyez sur Entrée pour revenir au menu...")
+    console.input("\nAppuyez sur Entrée pour revenir au menu...")
 
 
 
@@ -427,7 +427,7 @@ def get_domain_info():
     except Exception as e:
         console.print(f"[red]Erreur WHOIS : {e}[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def check_url_vt():
     url = console.input("🔗 Entrez une URL à analyser : ").strip()
@@ -442,7 +442,7 @@ def check_url_vt():
     else:
         console.print("[red]Erreur VirusTotal[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 def discord_token_info():
@@ -460,7 +460,7 @@ def discord_token_info():
     else:
         console.print("[red]❌ Token invalide ou erreur.[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def discord_webhook_info():
     print_header()
@@ -477,7 +477,7 @@ def discord_webhook_info():
     else:
         console.print("[red]❌ Webhook invalide ou erreur.[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def discord_webhook_generator():
     print_header()
@@ -493,7 +493,7 @@ def discord_webhook_generator():
     else:
         console.print("[red]❌ Erreur lors de l’envoi du message.[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def discord_server_info():
     """ Récupère les infos d'un serveur Discord via son lien d'invitation """
@@ -524,7 +524,7 @@ def discord_server_info():
     else:
         console.print(f"[red]❌ Erreur inconnue ({response.status_code}).[/red]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 import requests
@@ -593,7 +593,7 @@ def get_ip_location():
     except Exception as e:
         console.print(f"❌ Erreur : {e}", style="bold red")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def sentiment_analysis():
     """ Analyse du sentiment d’un texte (positif, neutre, négatif) """
@@ -674,7 +674,7 @@ def social_network_analysis():
     plt.title("Graphique des connexions sociales")
     plt.show()
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 def article_search():
@@ -697,7 +697,7 @@ def article_search():
     console.print(f"📰 Articles sur Google News : {news_url}")
 
     # ✅ Ajout correct de la pause pour éviter le clear immédiat
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 
 
@@ -756,7 +756,7 @@ def show_good_links():
     for name, url in links.items():
         console.print(f"🔗 {name} : [blue underline]{url}[/blue underline]")
 
-    console.input("\n🔄 Appuie sur Entrée pour revenir au menu...")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
 
 def get_terminal_size():
     return shutil.get_terminal_size((80, 20))
@@ -779,15 +779,15 @@ def spiderman_intro():
                                          ⠀⠀⠀⠀⢠⣿⠁⠀⣸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣇⠀⠈⣿⡆⠀⠀⠀⠀
                                         ⠀ ⠀⠀⠀⣾⡇⠀⢀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡀⠀⢸⣿⠀⠀⠀⠀
                                         ⠀⠀ ⠀⢸⣿⠀⠀⣸⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣇⠀⠀⣿⡇⠀⠀⠀
-                                          ⠀⠀⠀⣿⣿⠀⠀⣿⣿⣧⣤⣤⣤⡀⠀⣀⠀⠀⣀⠀⢀⣤⣤⣤⣤⣤⣤⣤⣤⣼⣿⣿⠀⠀⣿⣿⠀⠀⠀
+                                          ⠀⠀⠀⣿⣿⠀⠀⣿⣿⣧⣤⣤⣤⡀⠀⣀⠀⠀⣀⠀⢀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣼⣿⣿⠀⠀⣿⣿⠀⠀⠀
                                          ⠀⠀⢸⣿⡏⠀⠀⠀⠙⢉⣉⣩⣴⣶⣤⣙⣿⣶⣯⣦⣴⣼⣷⣿⣋⣤⣶⣦⣍⣉⠉⠋⠀⠀⠀⢸⣿⡇⠀⠀
                                     ⠀⠀⢿⣿⣷⣤⣶⣶⠿⠿⠛⠋⣉⡉⠙⢛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡛⠛⢉⣉⠙⠛⠿⠿⣶⣶⣾⣿⡿⠀⠀
                                         ⠀⠀⠀⠙⠻⠋⠉⠀⠀⠀⣠⣾⡿⠟⠛⣻⣿⣿⣿⣿⣿⣿⣿⣿⣟⠛⠻⢿⣷⣄⠀⠀⠀⠉⠙⠟⠋⠀⠀⠀
-                                        ⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⠿⠋⢀⣠⣾⠟⢫⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠈⠛⢿⣦⣄⠀⠀⠀⠀⠀
+                                        ⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⠿⠋⢀⣠⣾⠟⢫⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠈⠛⢿⣦⣄⠀⠀⠀
                                          ⠀⠀⠀⠀⠀⣠⣴⡿⠛⠁⠀⢸⣿⣿⠋⠀⢸⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠙⠻⣷⣦⣀⠀⣀
                                        ⠀⠀⢀⠀⣀⣴⣾⠟⠋⠀⠀⠀⠀⣿⣿⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠈⠙⣿⣿⡟
                                        ⢸⣿⣿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠈⣿⣿⣿⣿⣿⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⡇
-                                       ⢸⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⢹⣿⣿⣿⣿⣿⡏⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡇
+                                       ⢸⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⢿⣿⣿⡿⠀⠀⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⡇
                                        ⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀⠀⠀⢿⣿⣿⡿⠀⠀⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀
                                         ⠀⢻⣿⡄⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠇⠀⠀⠀⠀⠀⠀⠀⢀⣿⡟⠀
                                         ⠀⠘⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡿⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠃⠀
@@ -828,83 +828,41 @@ def show_startup_banner():
     console.input()
 
 def main_menu():
-    clear_console()
-    print_header()
-
-    # Sections
-    categories = {
-        "─ SÉCURITÉ & RÉSEAUX ─": [
-            ("01", "Website Vulnerability Scanner"),
-            ("02", "WHOIS & DNS Lookup"),
-            ("03", "URL Scanner (VirusTotal)"),
-            ("04", "IP Scanner"),
-            ("05", "IP Port Scanner"),
-            ("06", "IP Geolocalisation"),
-            ("07", "IP Generator"),
-            ("08", "Data Scraping OSINT"),
-            ("09", "Recherche d’articles"),
-        ],
-        "─ OSINT & ANALYSE ─": [
-            ("10", "OSINT Film & Série"),
-            ("11", "Détection d’identités multiples"),
-            ("12", "Vérification multi-réseaux sociaux"),
-            ("13", "Dashboards avec KPIs"),
-            ("14", "Cartes interactives"),
-            ("15", "Graphiques de réseau"),
-            ("16", "Analyse avancée réseaux sociaux"),
-            ("17", "Sentiment Analysis"),
-            ("18", "Time Analysis"),
-        ],
-        "─ DISCORD & UTILITAIRES ─": [
-            ("19", "Nitro Stats"),
-            ("20", "Nitro Global Stats"),
-            ("21", "Global Nitro Stat Serveur"),
-            ("22", "Discord Token Info"),
-            ("23", "Discord Webhook Info"),
-            ("24", "Discord Webhook Generator"),
-            ("25", "Discord Server Info"),
-            ("26", "OCR (Texte sur image)"),
-            ("27", "Les Bons Liens"),
-            ("28", "OSINT Alert System"),
-            ("29", "Quitter"),
-        ]
-    }
-
-    sep = "[bold green]" + "═" * 100 + "[/bold green]"
-    console.print(sep)
-    console.print("[bold underline green]🛠️  MENU PRINCIPAL - MULTI TOOL OSINT[/bold underline green]", justify="center")
-    console.print(sep)
-
-    # Affichage en 3 colonnes équilibrées
-    from rich.table import Table
-    table = Table(show_header=False, box=None, expand=True, pad_edge=False)
-
-    # Ajouter 3 colonnes
-    table.add_column(justify="left")
-    table.add_column(justify="left")
-    table.add_column(justify="left")
-
-    # Regroupe les items par catégorie
-    left = categories["─ SÉCURITÉ & RÉSEAUX ─"]
-    middle = categories["─ OSINT & ANALYSE ─"]
-    right = categories["─ DISCORD & UTILITAIRES ─"]
-
-    max_len = max(len(left), len(middle), len(right))
-    for i in range(max_len):
-        l = f"[bold green]{left[i][0]}[/bold green] {left[i][1]}" if i < len(left) else ""
-        m = f"[bold green]{middle[i][0]}[/bold green] {middle[i][1]}" if i < len(middle) else ""
-        r = f"[bold green]{right[i][0]}[/bold green] {right[i][1]}" if i < len(right) else ""
-        table.add_row(l, m, r)
-
-    console.print(table)
-    console.print(sep)
-    console.print("[bold green]Tape le numéro de l'option puis appuie sur Entrée :[/bold green]")
-
-    # Menu interactif
     while True:
-        choix = console.input("[bold green]👉 Numéro de l'option : [/bold green]").strip().zfill(2)
         clear_console()
-        # Gestion des options
+
+        # Affichage du header "OS1nT nEtW0rk"
+        console.print("\n[bold green]███████╗███████╗███╗   ██╗████████╗██╗   ██╗██████    ███╗   ██╗███████╗████████╗██╗    ██╗ ██████╗ ██████╗ ██╗  ██╗[/bold green]")
+        console.print("[bold green]██╔════╝██╔════╝████╗  ██║╚══██╔══╝██║   ██║██╔════╝    ████╗  ██║██╔════╝╚══██╔══╝██║    ██║██╔═══██╗██╔══██╗██║ ██╔╝[/bold green]")
+        console.print("[bold green]███████╗█████╗  ██╔██╗ ██║   ██║   ██║   ██║█████╗      ██╔██╗ ██║███████╗   ██║   ██║ █╗ ██║██║   ██║██████╔╝█████╔╝ [/bold green]")
+        console.print("[bold green]╚════██║██╔══╝  ██║╚██╗██║   ██║   ██║   ██║██╔══╝      ██║╚██╗██║╚════██║   ██║   ██║███╗██║██║   ██║██╔══██╗██╔═██╗ [/bold green]")
+        console.print("[bold green]███████║███████╗██║ ╚████║   ██║   ╚██████╔╝███████╗    ██║ ╚████║███████║   ██║   ╚███╔███╔╝╚██████╔╝██║  ██║██║  ██╗[/bold green]")
+        console.print("[bold green]╚══════╝╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚══════╝    ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝[/bold green]\n")
+
+        # Encadré façon fenêtre Windows
+        console.print("      ╔══════════════════════════════════════════════════════════════════════════════════╗", style="bold red")
+        console.print("      ║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║", style="bold red")
+        console.print("      ║══════════════════════════════════════════════════════════════════════════════════║", style="bold red")
+
+        # Les options
+        console.print("      ║ [01] > Website Vulnerability Scanner     [11] > Détection identités multiples    ║", style="bold red")
+        console.print("      ║ [02] > WHOIS & DNS Lookup                 [12] > Vérif multi réseaux sociaux     ║", style="bold red")
+        console.print("      ║ [03] > URL Scanner (VirusTotal)           [13] > Dashboards avec KPIs            ║", style="bold red")
+        console.print("      ║ [04] > IP Scanner                         [14] > Cartes interactives             ║", style="bold red")
+        console.print("      ║ [05] > IP Port Scanner                    [15] > Graphiques de réseau            ║", style="bold red")
+        console.print("      ║ [06] > IP Geolocalisation                  [16] > Analyse réseaux sociaux        ║", style="bold red")
+        console.print("      ║ [07] > IP Generator                        [17] > Sentiment Analysis             ║", style="bold red")
+        console.print("      ║ [08] > Data Scraping OSINT                 [18] > Time Analysis                  ║", style="bold red")
+        console.print("      ║ [09] > Recherche d'articles                [19] > Nitro Stats                    ║", style="bold red")
+        console.print("      ║ [10] > OSINT Film & Série                  [20] > Nitro Global Stats             ║", style="bold red")
+        console.print("      ║                                                                                  ║", style="bold red")
+        console.print("      ╚══════════════════════════════════════════════════════════════════════════════════╝", style="bold red")
+
+        # Input choix
+        choix = console.input("\n[bold green]👉 Numéro de l'option : [/bold green]").strip().zfill(2)
+
+        # Gestion des choix (comme ton code original)
+        clear_console()
         if choix == "01":
             website_vulnerability_scanner()
         elif choix == "02":
@@ -947,8 +905,7 @@ def main_menu():
         elif choix == "20":
             get_nitro_global_stats()
         elif choix == "21":
-            invite_code = console.input("Invitation Discord : ").strip()
-            global_nitro_stat_server(invite_code)
+            global_nitro_stat_server(console.input("Invitation Discord : ").strip())
         elif choix == "22":
             discord_token_info()
         elif choix == "23":
@@ -968,10 +925,12 @@ def main_menu():
             break
         else:
             console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
-
+            console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+   
 if __name__ == "__main__":
     console.clear()
     show_startup_banner()
-    console.print("[bold green]Bienvenue dans le MultiTool OSINT ![/bold green]")   
+    console.print("[bold green]Bienvenue dans le MultiTool OSINT ![/bold green]")
     spiderman_intro()
     main_menu()
+
