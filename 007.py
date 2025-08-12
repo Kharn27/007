@@ -847,6 +847,50 @@ def image_metadata_viewer():
     console.input("Entrée pour revenir...")
 
 
+def reverse_image_search():
+    """Effectue une recherche inverse d'image via Google et Yandex"""
+    console.print("[cyan]🖼️ Reverse Image Search (Google & Yandex)[/cyan]")
+    image_path = console.input("📷 Chemin de l'image : ").strip()
+
+    if not os.path.exists(image_path):
+        console.print("[red]Fichier introuvable[/red]")
+        console.input("Entrée pour revenir...")
+        return
+
+    with open(image_path, "rb") as f:
+        img_data = f.read()
+
+    # Recherche Google
+    google_search_url = "https://www.google.com/searchbyimage/upload"
+    files = {"encoded_image": (os.path.basename(image_path), img_data), "image_content": ""}
+    try:
+        response = requests.post(google_search_url, files=files, allow_redirects=False)
+        if response.status_code == 302 and "Location" in response.headers:
+            url = response.headers["Location"]
+            console.print(f"[green]✔ Résultats Google : {url}[/green]")
+            webbrowser.open(url)
+        else:
+            console.print("[red]❌ Échec de la recherche Google[/red]")
+    except Exception as e:
+        console.print(f"[red]Erreur Google : {e}[/red]")
+
+    # Recherche Yandex
+    try:
+        yandex_url = "https://yandex.com/images/search"
+        y_files = {"upfile": (os.path.basename(image_path), img_data)}
+        r = requests.post(yandex_url, files=y_files, allow_redirects=False)
+        if r.status_code == 302 and "Location" in r.headers:
+            y_url = "https://yandex.com" + r.headers["Location"]
+            console.print(f"[green]✔ Résultats Yandex : {y_url}[/green]")
+            webbrowser.open(y_url)
+        else:
+            console.print("[red]❌ Échec de la recherche Yandex[/red]")
+    except Exception as e:
+        console.print(f"[red]Erreur Yandex : {e}[/red]")
+
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+
 def detect_language():
     text = console.input("Texte : ")
     try:
@@ -1091,7 +1135,7 @@ def main_menu_page3():
             "║ [33] > HTTP Headers Viewer               [38] > Image Metadata Viewer            ║",
             "║ [34] > Random Password Generator         [39] > Language Detector                ║",
             "║ [35] > Base64 Encoder                    [40] > Open URL in Browser              ║",
-            "║ [41] > Envoyer SMS Twilio                                                        ║",  # Ajout de l'option
+            "║ [41] > Envoyer SMS Twilio                 [42] > Reverse Image Search            ║",
             "║ [p] > Page précédente                                                            ║",
             "╚══════════════════════════════════════════════════════════════════════════════════╝",
         ]
@@ -1124,6 +1168,8 @@ def main_menu_page3():
             open_website()
         elif choix == "41":
             send_sms_twilio()
+        elif choix == "42":
+            reverse_image_search()
         else:
             console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
         console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
