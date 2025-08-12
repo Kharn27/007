@@ -1,39 +1,49 @@
-import requests
-import time
-from thefuzz import process
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
-from rich.align import Align
-from rich import box
-import socket
-import whois
-import random 
-import hashlib
 import os
-from bs4 import BeautifulSoup
+import random
+import socket
+import time
+import hashlib
+import string
+import subprocess
+import shutil
+
+import requests
+import whois
 import folium
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
-import matplotlib.pyplot as plt
+import webbrowser
+from bs4 import BeautifulSoup
+from thefuzz import process
+from PIL import Image
+import base64
+from ping3 import ping
+from rich import box
+from rich.align import Align
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 from textblob import TextBlob
 import pytesseract
-from PIL import Image
-import webbrowser
 import geoip2.database
-import subprocess
-import shutil
+from twilio.rest import Client
 
 console = Console()
 
 headers = {
     "User-Agent": "Mozilla/5.0"
 }
-TMDB_API_KEY = "06040157f20d0bae45f3bee7bf57566a"  # Ta clé API TMDb
+TMDB_API_KEY = os.getenv("TMDB_API_KEY", "06040157f20d0bae45f3bee7bf57566a")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
-VT_API_KEY = "03caee030cc5a4b3b0dbf536a33c4c849fd3adad06d3f3297df3c2e56ace3fae"  # Remplace par ta clé API réelle
+VT_API_KEY = os.getenv(
+    "VT_API_KEY",
+    "03caee030cc5a4b3b0dbf536a33c4c849fd3adad06d3f3297df3c2e56ace3fae",
+)
+IPREGISTRY_API_KEY = os.getenv(
+    "IPREGISTRY_API_KEY", "ira_78qZAM7amNE8jXd8l54xiQU1RMvQsB0VyhOO"
+)
 
 def tmdb_request(endpoint, params):
     params["api_key"] = TMDB_API_KEY
@@ -42,14 +52,12 @@ def tmdb_request(endpoint, params):
         r = requests.get(url, params=params, timeout=10)
         if r.status_code == 200:
             return r.json()
-        else:
-            console.print(f"[red]Erreur API TMDb: {r.status_code}[/red]")
-            return None
+        console.print(f"[red]Erreur API TMDb: {r.status_code}[/red]")
+        return None
     except Exception as e:
         console.print(f"[red]Erreur requête TMDb : {e}[/red]")
         return None
 
-import requests
 
 def get_nitro_global_stats():
     """Estimation du nombre d'abonnés Discord Nitro dans le monde"""
@@ -268,7 +276,6 @@ def social_check_tool():
         "Goodreads": f"https://www.goodreads.com/{username}",
         "Letterboxd": f"https://letterboxd.com/{username}",
         "Discogs": f"https://www.discogs.com/user/{username}",
-        "Twitch": f"https://www.twitch.tv/{username}",
         "Patreon": f"https://www.patreon.com/{username}",
         "WhatsApp": f"https://wa.me/{username}",  # souvent numéro, mais on teste
         "Telegram": f"https://t.me/{username}",
@@ -526,12 +533,6 @@ def discord_server_info():
 
     console.input("\nAppuie sur Entrée pour revenir au menu...")
 
-
-import requests
-import subprocess
-import folium
-import webbrowser
-
 def scan_ports(ip):
     console.print(f"🔍 Scan Nmap en cours pour {ip}...", style="bold yellow")
     try:
@@ -543,21 +544,19 @@ def scan_ports(ip):
         console.print("\n🛡️ Résultat du scan Nmap :", style="bold cyan")
         console.print(result)
     except subprocess.CalledProcessError as e:
-        console.print(f"❌ Erreur lors du scan Nmap :\n{e.output}", style="bold red")
+        console.print(f"❌ Erreur lors du scan Nmap :\n{e.output}", style="bold red", justify="center")
 
 def get_ip_location():
     console.print("[cyan]📍 Géolocalisation IP via ipregistry.co après scan Nmap[/cyan]")
     ip = console.input("🔎 Entrez l'adresse IP à analyser : ").strip()
 
     if not ip:
-        console.print("❌ IP invalide, réessaie.", style="bold red")
+        console.print("❌ IP invalide, réessaie.", style="bold red", justify="center")
         return
 
     scan_ports(ip)  # 🔥 Étape 1 : Scan de ports
 
-    # 🔐 Clé API ipregistry
-    api_key = "ira_78qZAM7amNE8jXd8l54xiQU1RMvQsB0VyhOO"
-    url = f"https://api.ipregistry.co/{ip}?key={api_key}"
+    url = f"https://api.ipregistry.co/{ip}?key={IPREGISTRY_API_KEY}"
 
     try:
         response = requests.get(url, timeout=5)
@@ -591,7 +590,7 @@ def get_ip_location():
         console.print("\n🗺️ Carte ouverte dans le navigateur", style="bold green")
 
     except Exception as e:
-        console.print(f"❌ Erreur : {e}", style="bold red")
+        console.print(f"❌ Erreur : {e}", style="bold red", justify="center")
 
     console.input("\nAppuie sur Entrée pour revenir au menu...")
 
@@ -758,6 +757,112 @@ def show_good_links():
 
     console.input("\nAppuie sur Entrée pour revenir au menu...")
 
+
+def reverse_ip_lookup():
+    ip = console.input("Adresse IP : ").strip()
+    try:
+        host, _, _ = socket.gethostbyaddr(ip)
+        console.print(f"[green]Domaine associé : {host}[/green]")
+    except Exception:
+        console.print("[red]Aucun domaine trouvé pour cette IP[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def ping_host():
+    host = console.input("Hôte à ping : ").strip()
+    try:
+        result = ping(host, unit="ms")
+        if result is None:
+            console.print("[red]Aucune réponse[/red]")
+        else:
+            console.print(f"[green]{host} a répondu en {result:.2f} ms[/green]")
+    except Exception as e:
+        console.print(f"[red]Erreur de ping : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def http_headers_viewer():
+    url = console.input("URL : ").strip()
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        for k, v in r.headers.items():
+            console.print(f"[cyan]{k}[/cyan]: {v}")
+    except Exception as e:
+        console.print(f"[red]Erreur : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def random_password_generator():
+    length_str = console.input("Longueur du mot de passe : ").strip()
+    if not length_str.isdigit():
+        console.print("[red]Longueur invalide[/red]")
+        return
+    length = int(length_str)
+    chars = string.ascii_letters + string.digits + string.punctuation
+    pwd = "".join(random.choice(chars) for _ in range(length))
+    console.print(f"[green]{pwd}[/green]")
+    console.input("Entrée pour revenir...")
+
+
+def base64_encoder():
+    text = console.input("Texte à encoder : ")
+    encoded = base64.b64encode(text.encode()).decode()
+    console.print(f"[green]{encoded}[/green]")
+    console.input("Entrée pour revenir...")
+
+
+def base64_decoder():
+    text = console.input("Texte base64 : ")
+    try:
+        decoded = base64.b64decode(text).decode()
+        console.print(f"[green]{decoded}[/green]")
+    except Exception:
+        console.print("[red]Décodage impossible[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def hash_generator():
+    text = console.input("Texte à hasher : ")
+    algo = console.input("Algorithme (md5, sha1, sha256) : ").strip().lower()
+    func = getattr(hashlib, algo, None)
+    if not func:
+        console.print("[red]Algorithme inconnu[/red]")
+    else:
+        console.print(f"[green]{func(text.encode()).hexdigest()}[/green]")
+    console.input("Entrée pour revenir...")
+
+
+def image_metadata_viewer():
+    path = console.input("Chemin de l'image : ").strip()
+    try:
+        img = Image.open(path)
+        info = img._getexif() or {}
+        if not info:
+            console.print("[yellow]Aucune métadonnée trouvée[/yellow]")
+        else:
+            for k, v in info.items():
+                console.print(f"[cyan]{k}[/cyan]: {v}")
+    except Exception as e:
+        console.print(f"[red]Erreur : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def detect_language():
+    text = console.input("Texte : ")
+    try:
+        lang = TextBlob(text).detect_language()
+        console.print(f"[green]Langue détectée : {lang}[/green]")
+    except Exception as e:
+        console.print(f"[red]Erreur : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def open_website():
+    url = console.input("URL à ouvrir : ").strip()
+    webbrowser.open(url)
+    console.print(f"[green]Ouverture de {url}[/green]")
+    console.input("Entrée pour revenir...")
+
 def get_terminal_size():
     return shutil.get_terminal_size((80, 20))
 
@@ -816,41 +921,42 @@ def show_startup_banner():
 def update_print():
     console.clear()
     print_header()
-    console.print("                             ▒█████    ██████  ██▓ ███▄    █ ▄▄▄█████▓    ███▄    █ ▓█████ ▄▄▄█████▓               ")
-    console.print("                           ▒██▒  ██▒▒██    ▒ ▓██▒ ██ ▀█   █ ▓  ██▒ ▓▒    ██ ▀█   █ ▓█   ▀ ▓  ██▒ ▓▒               ")
-    console.print("                           ▒██░  ██▒░ ▓██▄   ▒██▒▓██  ▀█ ██▒▒ ▓██░ ▒░   ▓██  ▀█ ██▒▒███   ▒ ▓██░ ▒░               ")
-    console.print("                           ▒██   ██░  ▒   ██▒░██░▓██▒  ▐▌██▒░ ▓██▓ ░    ▓██▒  ▐▌██▒▒▓█  ▄ ░ ▓██▓ ░                ")
-    console.print("                           ░ ████▓▒░▒██████▒▒░██░▒██░   ▓██░  ▒██▒ ░    ▒██░   ▓██░░▒████▒  ▒██▒ ░                ")
-    console.print("                           ░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░░▓  ░ ▒░   ▒ ▒   ▒ ░░      ░ ▒░   ▒ ▒ ░░ ▒░ ░  ▒ ░░                  ")
-    console.print("                             ░ ▒ ▒░ ░ ░▒  ░ ░ ▒ ░░ ░░   ░ ▒░    ░       ░ ░░   ░ ▒░ ░ ░  ░    ░                   ")
-    console.print("                           ░ ░ ░ ▒  ░  ░  ░   ▒ ░   ░   ░ ░   ░            ░   ░ ░    ░     ░                       ")
-    console.print("                               ░ ░        ░   ░           ░                      ░    ░  ░          ░                         ")
-    # >>>>> Suppression du clear_console() ici <<<<<
-    # console.clear()
-    print_header()
+    banner = r"""
+                              ▒█████    ██████  ██▓ ███▄    █ ▄▄▄█████▓    ███▄    █ ▓█████ ▄▄▄█████▓
+                            ▒██▒  ██▒▒██    ▒ ▓██▒ ██ ▀█   █ ▓  ██▒ ▓▒    ██ ▀█   █ ▓█   ▀ ▓  ██▒ ▓▒
+                            ▒██░  ██▒░ ▓██▄   ▒██▒▓██  ▀█ ██▒▒ ▓██░ ▒░   ▓██  ▀█ ██▒▒███   ▒ ▓██░ ▒░
+                            ▒██   ██░  ▒   ██▒░██░▓██▒  ▐▌██▒░ ▓██▓ ░    ▓██▒  ▐▌██▒▒▓█  ▄ ░ ▓██▓ ░
+                            ░ ████▓▒░▒██████▒▒░██░▒██░   ▓██░  ▒██▒ ░    ▒██░   ▓██░░▒████▒  ▒██▒ ░
+                            ░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░░▓  ░ ▒░   ▒ ▒   ▒ ░░      ░ ▒░   ▒ ▒ ░░ ▒░ ░  ▒ ░░
+                              ░ ▒ ▒░ ░ ░▒  ░ ░ ▒ ░░ ░░   ░ ▒░    ░       ░ ░░   ░ ▒░ ░ ░  ░    ░
+                            ░ ░ ░ ▒  ░  ░  ░   ▒ ░   ░   ░ ░   ░            ░   ░ ░    ░     ░
+                              ░ ░        ░   ░           ░                      ░    ░  ░          ░
+    """
+    for line in banner.strip("\n").split("\n"):
+        console.print(line, style="bold green", justify="center")
 
 def main_menu_page1():
     while True:
         update_print()
-        console.print("      ╔══════════════════════════════════════════════════════════════════════════════════╗", style="bold red")
-        console.print("      ║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║", style="bold red")
-        console.print("      ║══════════════════════════════════════════════════════════════════════════════════║", style="bold red")
+        console.print("╔══════════════════════════════════════════════════════════════════════════════════╗", style="bold red", justify="center")
+        console.print("║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║", style="bold red", justify="center")
+        console.print("║══════════════════════════════════════════════════════════════════════════════════║", style="bold red", justify="center")
 
         # Options 01 à 20
-        console.print("      ║ [01] > Website Vulnerability Scanner     [11] > Détection identités multiples    ║", style="bold red")
-        console.print("      ║ [02] > WHOIS & DNS Lookup                 [12] > Vérif multi réseaux sociaux     ║", style="bold red")
-        console.print("      ║ [03] > URL Scanner (VirusTotal)           [13] > Dashboards avec KPIs            ║", style="bold red")
-        console.print("      ║ [04] > IP Scanner                         [14] > Cartes interactives             ║", style="bold red")
-        console.print("      ║ [05] > IP Port Scanner                    [15] > Graphiques de réseau            ║", style="bold red")
-        console.print("      ║ [06] > IP Geolocalisation                  [16] > Analyse réseaux sociaux        ║", style="bold red")
-        console.print("      ║ [07] > IP Generator                        [17] > Sentiment Analysis             ║", style="bold red")
-        console.print("      ║ [08] > Data Scraping OSINT                 [18] > Time Analysis                  ║", style="bold red")
-        console.print("      ║ [09] > Recherche d'articles                [19] > Nitro Stats                    ║", style="bold red")
-        console.print("      ║ [10] > OSINT Film & Série                  [20] > Nitro Global Stats             ║", style="bold red")
+        console.print("║ [01] > Website Vulnerability Scanner     [11] > Détection identités multiples    ║", style="bold red", justify="center")
+        console.print("║ [02] > WHOIS & DNS Lookup                 [12] > Vérif multi réseaux sociaux     ║", style="bold red", justify="center")
+        console.print("║ [03] > URL Scanner (VirusTotal)           [13] > Dashboards avec KPIs            ║", style="bold red", justify="center")
+        console.print("║ [04] > IP Scanner                         [14] > Cartes interactives             ║", style="bold red", justify="center")
+        console.print("║ [05] > IP Port Scanner                    [15] > Graphiques de réseau            ║", style="bold red", justify="center")
+        console.print("║ [06] > IP Geolocalisation                  [16] > Analyse réseaux sociaux        ║", style="bold red", justify="center")
+        console.print("║ [07] > IP Generator                        [17] > Sentiment Analysis             ║", style="bold red", justify="center")
+        console.print("║ [08] > Data Scraping OSINT                 [18] > Time Analysis                  ║", style="bold red", justify="center")
+        console.print("║ [09] > Recherche d'articles                [19] > Nitro Stats                    ║", style="bold red", justify="center")
+        console.print("║ [10] > OSINT Film & Série                  [20] > Nitro Global Stats             ║", style="bold red", justify="center")
 
         # Option navigation "next page"
-        console.print("      ║                                                              [n] > Page suivante   ║", style="bold red")
-        console.print("      ╚══════════════════════════════════════════════════════════════════════════════════╝", style="bold red")
+        console.print("║                                                              [n] > Page suivante   ║", style="bold red", justify="center")
+        console.print("╚══════════════════════════════════════════════════════════════════════════════════╝", style="bold red", justify="center")
 
         choix = console.input("\n[bold green]appuie sur [N] pour la page suivante est [P] pour la page précédente : [/bold green]").strip().lower()
 
@@ -925,8 +1031,8 @@ def main_menu_page2():
             "║ [22] > Discord Token Info                  [26] > OCR Text Extraction            ║",
             "║ [23] > Discord Webhook Info                [27] > Show Good Links                ║",
             "║ [24] > Discord Webhook Generator           [28] > OSINT Alert System             ║",
-            "║                                            [29] > Quitter                        ║",
-            "║                                                            [p] > Page précédente ║",
+            "║ [30] > Discord Token Tools                [29] > Quitter                         ║",
+            "║ [p] > Page précédente                                      [n] > Page suivante   ║",
             "╚══════════════════════════════════════════════════════════════════════════════════╝",
         ]
         
@@ -939,6 +1045,9 @@ def main_menu_page2():
 
         if choix == 'p':
             return  # Retour à la page 1
+        if choix == 'n':
+            main_menu_page3()
+            continue
 
         choix = choix.zfill(2)
 
@@ -959,6 +1068,8 @@ def main_menu_page2():
             show_good_links()
         elif choix == "28":
             osint_alert_system()
+        elif choix == "30":
+            token_tools_menu()
         elif choix == "29":
             console.print("\n[bold green]👋 A bientôt, merci d'avoir utilisé le MultiTool OSINT ![/bold green]")
             exit()
@@ -966,7 +1077,223 @@ def main_menu_page2():
             console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
 
         console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
-   
+
+
+def main_menu_page3():
+    while True:
+        update_print()
+        lines = [
+            "╔══════════════════════════════════════════════════════════════════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║",
+            "║══════════════════════════════════════════════════════════════════════════════════║",
+            "║ [31] > Reverse IP Lookup                 [36] > Base64 Decoder                   ║",
+            "║ [32] > Ping Host                         [37] > Hash Generator                   ║",
+            "║ [33] > HTTP Headers Viewer               [38] > Image Metadata Viewer            ║",
+            "║ [34] > Random Password Generator         [39] > Language Detector                ║",
+            "║ [35] > Base64 Encoder                    [40] > Open URL in Browser              ║",
+            "║ [41] > Envoyer SMS Twilio                                                        ║",  # Ajout de l'option
+            "║ [p] > Page précédente                                                            ║",
+            "╚══════════════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold blue", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option ou 'p' pour la page précédente : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        choix = choix.zfill(2)
+        if choix == "31":
+            reverse_ip_lookup()
+        elif choix == "32":
+            ping_host()
+        elif choix == "33":
+            http_headers_viewer()
+        elif choix == "34":
+            random_password_generator()
+        elif choix == "35":
+            base64_encoder()
+        elif choix == "36":
+            base64_decoder()
+        elif choix == "37":
+            hash_generator()
+        elif choix == "38":
+            image_metadata_viewer()
+        elif choix == "39":
+            detect_language()
+        elif choix == "40":
+            open_website()
+        elif choix == "41":
+            send_sms_twilio()
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+def discord_api_request(token, method, endpoint, payload=None):
+    """Helper for Discord API requests"""
+    url = f"https://discord.com/api/v9/{endpoint}"
+    headers = {"Authorization": token}
+    try:
+        r = requests.request(method, url, json=payload, headers=headers, timeout=10)
+        if r.status_code in (200, 201, 204):
+            console.print("[green]✔ Opération réussie[/green]")
+        else:
+            console.print(f"[red]Erreur {r.status_code}: {r.text}[/red]")
+        return r
+    except Exception as e:
+        console.print(f"[red]Erreur requête Discord: {e}[/red]")
+        return None
+
+
+def token_login():
+    token = console.input("Token Discord : ").strip()
+    r = discord_api_request(token, "GET", "users/@me")
+    if r and r.status_code == 200:
+        data = r.json()
+        console.print(f"Connecté en tant que {data.get('username')}#{data.get('discriminator')}")
+    console.input("Entrée pour revenir...")
+
+
+def token_change_language():
+    token = console.input("Token Discord : ").strip()
+    locale = console.input("Langue (ex: fr, en-US) : ").strip()
+    discord_api_request(token, "PATCH", "users/@me/settings", {"locale": locale})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_description():
+    token = console.input("Token Discord : ").strip()
+    bio = console.input("Nouvelle description : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"bio": bio})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_username():
+    token = console.input("Token Discord : ").strip()
+    username = console.input("Nouveau pseudo : ").strip()
+    password = console.input("Mot de passe : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"username": username, "password": password})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_status():
+    token = console.input("Token Discord : ").strip()
+    status = console.input("Nouveau statut : ").strip()
+    payload = {"custom_status": {"text": status}}
+    discord_api_request(token, "PATCH", "users/@me/settings", payload)
+    console.input("Entrée pour revenir...")
+
+
+def token_change_avatar():
+    token = console.input("Token Discord : ").strip()
+    path = console.input("Chemin de l'image : ").strip()
+    try:
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("utf-8")
+        payload = {"avatar": f"data:image/png;base64,{encoded}"}
+        discord_api_request(token, "PATCH", "users/@me", payload)
+    except FileNotFoundError:
+        console.print("[red]Fichier introuvable[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def token_reset_avatar():
+    token = console.input("Token Discord : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"avatar": None})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_email():
+    token = console.input("Token Discord : ").strip()
+    email = console.input("Nouvel email : ").strip()
+    password = console.input("Mot de passe : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"email": email, "password": password})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_password():
+    token = console.input("Token Discord : ").strip()
+    old_password = console.input("Ancien mot de passe : ").strip()
+    new_password = console.input("Nouveau mot de passe : ").strip()
+    payload = {"password": new_password, "old_password": old_password}
+    discord_api_request(token, "PATCH", "users/@me", payload)
+    console.input("Entrée pour revenir...")
+
+
+def token_logout():
+    token = console.input("Token Discord : ").strip()
+    discord_api_request(token, "POST", "auth/logout", {"token": token})
+    console.input("Entrée pour revenir...")
+
+
+def token_tools_menu():
+    while True:
+        update_print()
+        lines = [
+            "╔════════════════════════ Token Tools ═══════════════════════╗",
+            "║ [01] > Login via token                                     ║",
+            "║ [02] > Changer la langue                                   ║",
+            "║ [03] > Changer la description                              ║",
+            "║ [04] > Changer le pseudo                                   ║",
+            "║ [05] > Changer le statut                                   ║",
+            "║ [06] > Changer l'avatar                                    ║",
+            "║ [07] > Réinitialiser l'avatar                              ║",
+            "║ [08] > Changer l'email                                     ║",
+            "║ [09] > Changer le mot de passe                             ║",
+            "║ [10] > Déconnexion du token                                ║",
+            "║ [11] > Retour                                              ║",
+            "╚═══════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold red", justify="center")
+        choix = console.input("\n[bold green]Option : [/bold green]").strip().lower()
+        choix = choix.zfill(2)
+        if choix == "01":
+            token_login()
+        elif choix == "02":
+            token_change_language()
+        elif choix == "03":
+            token_change_description()
+        elif choix == "04":
+            token_change_username()
+        elif choix == "05":
+            token_change_status()
+        elif choix == "06":
+            token_change_avatar()
+        elif choix == "07":
+            token_reset_avatar()
+        elif choix == "08":
+            token_change_email()
+        elif choix == "09":
+            token_change_password()
+        elif choix == "10":
+            token_logout()
+        elif choix == "11":
+            return
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+
+def send_sms_twilio():
+    console.print("[bold cyan]\n====== Envoi de SMS via Twilio ======[/bold cyan]")
+    account_sid = console.input("Entrez votre Account SID Twilio: ").strip()
+    auth_token = console.input("Entrez votre Auth Token Twilio: ").strip()
+    from_number = console.input("Entrez votre numéro Twilio (from): ").strip()
+    to_numbers_input = console.input("Entrez le(s) numéro(s) destinataire(s) séparés par des virgules : ").strip()
+    to_numbers = [num.strip() for num in to_numbers_input.split(",")]
+    message = console.input("Entrez le message à envoyer : ").strip()
+    try:
+        client = Client(account_sid, auth_token)
+        for to_number in to_numbers:
+            message_sent = client.messages.create(
+                body=message,
+                from_=from_number,
+                to=to_number
+            )
+            console.print(f"[green]Message envoyé à {to_number}, SID: {message_sent.sid}[/green]")
+    except Exception as e:
+        console.print(f"[red]Erreur d'envoi : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
 if __name__ == "__main__":
     console.clear()
     show_startup_banner()
@@ -974,4 +1301,3 @@ if __name__ == "__main__":
     update_print()
     spiderman_intro()
     main_menu_page1()
-
