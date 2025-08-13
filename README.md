@@ -32,8 +32,7 @@
 | 17  | Sentiment Analysis                 | Detect emotions and trends in text |
 | 18  | Time Analysis                      | Track evolution of events and trends |
 | 19  | OSINT Alert System                 | Automated monitoring and alerts |
-| 20  | Reverse Image Search               | Find where an image appears on the web |
-| 21  | ...and many more!                  | See the full menu in the tool |
+| 20  | ...and many more!                  | See the full menu in the tool |
 
 ---
 

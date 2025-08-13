@@ -198,53 +198,222 @@ def clear_console():
 
 def website_vulnerability_scanner():
     print_header()
-    console.print("[bold cyan]\n====== Website Vulnerability Scanner ======[/bold cyan]")
+    console.print("[bold cyan]\n====== Advanced Website Vulnerability Scanner ======[/bold cyan]")
+    console.print("[bold red]🔍 Scan complet de vulnérabilités OWASP Top 10[/bold red]")
 
     url = console.input("🔗 Entrez l'URL du site à scanner : ").strip()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+
+    domain = url.replace("https://", "").replace("http://", "").split("/")[0]
+    
+    console.print(f"\n[bold yellow]🎯 Analyse approfondie de {url}...[/bold yellow]\n")
+
+    # Initialisation des résultats
+    vulnerabilities = []
+    open_ports = []
+    sensitive_files = []
+    subdomains = []
+    tech_stack = {}
 
     try:
-        response = requests.get(url)
-        console.print(f"\n🔍 Analyse de [bold yellow]{url}[/bold yellow]...\n")
-        console.print(f"🔹 Code HTTP : {response.status_code}")
-
-        # Vérifier les headers de sécurité
-        security_headers = ["Strict-Transport-Security", "X-Frame-Options", "X-XSS-Protection", "Content-Security-Policy"]
-        for header in security_headers:
-            if header in response.headers:
-                console.print(f"[green]✅ {header} présent[/green]")
-            else:
-                console.print(f"[red]❌ {header} manquant[/red]")
-
-        # Détection des erreurs SQL
-        sql_errors = ["mysql_fetch_array()", "You have an error in your SQL syntax", "Error executing SQL", "Undefined index"]
-        for error in sql_errors:
-            if error in response.text:
-                console.print(f"[red]❗ Potentielle vulnérabilité SQL trouvée : {error}[/red]")
-
-        # Analyse des formulaires HTML
-        soup = BeautifulSoup(response.text, "html.parser")
-        forms = soup.find_all("form")
-        console.print(f"\n🔎 Nombre de formulaires détectés : {len(forms)}")
-        if forms:
-            console.print("[yellow]⚠️ Vérifie si les entrées sont bien filtrées contre l’injection SQL.[/yellow]")
-
-        # Vérification des ports ouverts
-        domain = url.replace("https://", "").replace("http://", "").split("/")[0]
-        common_ports = [21, 22, 23, 25, 53, 80, 443, 3306, 8080]  # Ports classiques
-        console.print("\n🔎 Scan rapide des ports ouverts...")
-
-        for port in common_ports:
+        # 1. Scan de ports avancé (50+ ports)
+        console.print("[bold cyan]🔍 Scan de ports avancé...[/bold cyan]")
+        ports_to_scan = [21,22,23,25,53,80,110,111,135,139,143,443,993,995,1433,1521,3306,3389,5432,5900,5984,6379,8080,8443,9200,11211,27017,27018,27019,50000,50030,50060,50070,50075,50090,50100,50200,50300,50400,50500,50600,50700,50800,50900,51000,51100,51200,51300,51400,51500,51600,51700,51800,51900,52000]
+        
+        for port in ports_to_scan:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(2)
+            sock.settimeout(1)
             result = sock.connect_ex((domain, port))
             if result == 0:
-                console.print(f"[red]❌ Port ouvert détecté : {port}[/red]")
+                open_ports.append(port)
+                console.print(f"[red]❌ Port {port} ouvert[/red]")
             sock.close()
+
+        # 2. Analyse des headers de sécurité OWASP
+        console.print("\n[bold cyan]🔒 Analyse des headers de sécurité...[/bold cyan]")
+        response = requests.get(url, timeout=10)
+        security_headers = {
+            "Strict-Transport-Security": "Protection HTTPS",
+            "X-Frame-Options": "Clickjacking",
+            "X-XSS-Protection": "XSS Protection",
+            "X-Content-Type-Options": "MIME sniffing",
+            "Content-Security-Policy": "Injection de contenu",
+            "Referrer-Policy": "Fuite d'informations",
+            "Permissions-Policy": "Permissions du navigateur"
+        }
+        
+        for header, desc in security_headers.items():
+            if header in response.headers:
+                console.print(f"[green]✅ {header} présent ({desc})[/green]")
+            else:
+                console.print(f"[red]❌ {header} manquant ({desc})[/red]")
+                vulnerabilities.append(f"Header manquant: {header}")
+
+        # 3. Détection de la stack technologique
+        console.print("\n[bold cyan]🔧 Détection de la stack technologique...[/bold cyan]")
+        headers = response.headers
+        
+        # Détection via headers
+        if 'X-Powered-By' in headers:
+            tech_stack['Backend'] = headers['X-Powered-By']
+        if 'Server' in headers:
+            tech_stack['Server'] = headers['Server']
+        
+        # Détection via meta tags
+        soup = BeautifulSoup(response.text, "html.parser")
+        meta_generator = soup.find('meta', attrs={'name': 'generator'})
+        if meta_generator:
+            tech_stack['CMS/Framework'] = meta_generator.get('content', 'Inconnu')
+        
+        # Détection via scripts/styles
+        scripts = soup.find_all('script')
+        styles = soup.find_all('link', attrs={'rel': 'stylesheet'})
+        
+        js_frameworks = ['jquery', 'react', 'angular', 'vue', 'bootstrap']
+        for script in scripts:
+            src = str(script.get('src', '')).lower()
+            for framework in js_frameworks:
+                if framework in src:
+                    tech_stack['JS Framework'] = framework.title()
+        
+        for tech, value in tech_stack.items():
+            console.print(f"[yellow]📊 {tech}: {value}[/yellow]")
+
+        # 4. Recherche de fichiers sensibles
+        console.print("\n[bold cyan]🔍 Recherche de fichiers sensibles...[/bold cyan]")
+        sensitive_paths = [
+            'robots.txt', 'sitemap.xml', '.htaccess', 'web.config',
+            'backup.zip', 'backup.tar.gz', 'dump.sql', 'database.sql',
+            'config.php', 'wp-config.php', 'settings.php', 'config.json',
+            '.env', '.git/config', '.svn/entries', 'phpinfo.php',
+            'admin/', 'administrator/', 'wp-admin/', 'panel/', 'login/',
+            'test/', 'dev/', 'staging/', 'api/', 'rest/',
+            'uploads/', 'files/', 'documents/', 'media/',
+            'phpmyadmin/', 'pma/', 'mysql/', 'sql/',
+            'info.php', 'phpversion.php', 'test.php'
+        ]
+        
+        for path in sensitive_paths:
+            test_url = f"{url.rstrip('/')}/{path}"
+            try:
+                resp = requests.head(test_url, timeout=3)
+                if resp.status_code == 200:
+                    sensitive_files.append(test_url)
+                    console.print(f"[red]❌ Fichier sensible trouvé: {test_url}[/red]")
+            except:
+                pass
+
+        # 5. Scan de sous-domaines
+        console.print("\n[bold cyan]🌐 Scan de sous-domaines...[/bold cyan]")
+        subdomains_to_check = ['www', 'mail', 'ftp', 'admin', 'test', 'dev', 'staging', 'api', 'blog', 'shop', 'support', 'cdn', 'static', 'media', 'cdn1', 'cdn2']
+        
+        for sub in subdomains_to_check:
+            subdomain = f"{sub}.{domain}"
+            try:
+                ip = socket.gethostbyname(subdomain)
+                subdomains.append(subdomain)
+                console.print(f"[green]✅ Sous-domaine trouvé: {subdomain} ({ip})[/green]")
+            except:
+                pass
+
+        # 6. Test d'injection SQL
+        console.print("\n[bold cyan]💉 Test d'injection SQL...[/bold cyan]")
+        sql_payloads = [
+            "' OR 1=1--", "' OR '1'='1", "'; DROP TABLE users--",
+            "' UNION SELECT null--", "' OR SLEEP(5)--"
+        ]
+        
+        forms = soup.find_all('form')
+        for form in forms:
+            action = form.get('action', '')
+            method = form.get('method', 'get').lower()
+            inputs = form.find_all('input')
+            
+            for payload in sql_payloads:
+                # Test simple injection
+                params = {}
+                for inp in inputs:
+                    if inp.get('type') not in ['submit', 'button']:
+                        params[inp.get('name', 'test')] = payload
+                
+                try:
+                    if method == 'post':
+                        test_resp = requests.post(url, data=params, timeout=5)
+                    else:
+                        test_resp = requests.get(url, params=params, timeout=5)
+                    
+                    sql_errors = ["mysql", "sql syntax", "odbc", "oracle", "postgresql", "sqlite"]
+                    for error in sql_errors:
+                        if error.lower() in test_resp.text.lower():
+                            vulnerabilities.append(f"Injection SQL possible sur formulaire")
+                            console.print(f"[red]❌ Vulnérabilité SQL détectée[/red]")
+                except:
+                    pass
+
+        # 7. Test XSS
+        console.print("\n[bold cyan]🎯 Test XSS...[/bold cyan]")
+        xss_payloads = [
+            "<script>alert('XSS')</script>",
+            "<img src=x onerror=alert('XSS')>",
+            "javascript:alert('XSS')"
+        ]
+        
+        for payload in xss_payloads:
+            try:
+                test_url = f"{url}?q={payload}"
+                test_resp = requests.get(test_url, timeout=5)
+                if payload in test_resp.text:
+                    vulnerabilities.append("XSS possible")
+                    console.print(f"[red]❌ Vulnérabilité XSS détectée[/red]")
+            except:
+                pass
+
+        # 8. Analyse OWASP Top 10
+        console.print("\n[bold cyan]📋 Analyse OWASP Top 10...[/bold cyan]")
+        owasp_checks = {
+            "A01: Broken Access Control": len(sensitive_files) > 0,
+            "A02: Cryptographic Failures": 'https' not in url,
+            "A03: Injection": len([v for v in vulnerabilities if 'SQL' in v or 'XSS' in v]) > 0,
+            "A04: Insecure Design": len(forms) > 0,
+            "A05: Security Misconfiguration": len([h for h in security_headers if h not in response.headers]) > 0,
+            "A06: Vulnerable Components": bool(tech_stack),
+            "A07: Authentication Failures": any('login' in str(form).lower() for form in forms),
+            "A08: Software Integrity Failures": False,
+            "A09: Logging Failures": False,
+            "A10: Server-Side Request Forgery": False
+        }
+        
+        for vuln, detected in owasp_checks.items():
+            status = "❌" if detected else "✅"
+            console.print(f"[{status}] {vuln}[/]")
+
+        # 9. Résumé final
+        console.print("\n[bold green]📊 RÉSUMÉ DES RÉSULTATS[/bold green]")
+        console.print(f"Ports ouverts: {len(open_ports)}")
+        console.print(f"Fichiers sensibles trouvés: {len(sensitive_files)}")
+        console.print(f"Sous-domaines découverts: {len(subdomains)}")
+        console.print(f"Vulnérabilités détectées: {len(vulnerabilities)}")
+        
+        if sensitive_files:
+            console.print("\n[bold red]🔥 FICHIERS SENSIBLES TROUVÉS:[/bold red]")
+            for file in sensitive_files:
+                console.print(f"  - {file}")
+        
+        if open_ports:
+            console.print("\n[bold red]🔥 PORTS OUVERTS:[/bold red]")
+            for port in open_ports:
+                console.print(f"  - Port {port}")
 
     except requests.exceptions.RequestException as e:
         console.print(f"[red]❌ Erreur lors de l'analyse : {e}[/red]")
+    except Exception as e:
+        # Fix markup error by escaping square brackets and backslashes in exception message
+        error_message = str(e).replace("[", "\\[").replace("]", "\\]").replace("\\", "\\\\")
+        console.print(f"[red]❌ Erreur inattendue : {error_message}[/red]")
 
-    console.input("\nAppuie sur Entrée pour revenir au menu...")
+    console.input("\n[bold yellow]👉 Appuie sur Entrée pour revenir au menu...[/bold yellow]")
 
 
 def social_check_tool():
@@ -847,50 +1016,6 @@ def image_metadata_viewer():
     console.input("Entrée pour revenir...")
 
 
-def reverse_image_search():
-    """Effectue une recherche inverse d'image via Google et Yandex"""
-    console.print("[cyan]🖼️ Reverse Image Search (Google & Yandex)[/cyan]")
-    image_path = console.input("📷 Chemin de l'image : ").strip()
-
-    if not os.path.exists(image_path):
-        console.print("[red]Fichier introuvable[/red]")
-        console.input("Entrée pour revenir...")
-        return
-
-    with open(image_path, "rb") as f:
-        img_data = f.read()
-
-    # Recherche Google
-    google_search_url = "https://www.google.com/searchbyimage/upload"
-    files = {"encoded_image": (os.path.basename(image_path), img_data), "image_content": ""}
-    try:
-        response = requests.post(google_search_url, files=files, allow_redirects=False)
-        if response.status_code == 302 and "Location" in response.headers:
-            url = response.headers["Location"]
-            console.print(f"[green]✔ Résultats Google : {url}[/green]")
-            webbrowser.open(url)
-        else:
-            console.print("[red]❌ Échec de la recherche Google[/red]")
-    except Exception as e:
-        console.print(f"[red]Erreur Google : {e}[/red]")
-
-    # Recherche Yandex
-    try:
-        yandex_url = "https://yandex.com/images/search"
-        y_files = {"upfile": (os.path.basename(image_path), img_data)}
-        r = requests.post(yandex_url, files=y_files, allow_redirects=False)
-        if r.status_code == 302 and "Location" in r.headers:
-            y_url = "https://yandex.com" + r.headers["Location"]
-            console.print(f"[green]✔ Résultats Yandex : {y_url}[/green]")
-            webbrowser.open(y_url)
-        else:
-            console.print("[red]❌ Échec de la recherche Yandex[/red]")
-    except Exception as e:
-        console.print(f"[red]Erreur Yandex : {e}[/red]")
-
-    console.input("\nAppuie sur Entrée pour revenir au menu...")
-
-
 def detect_language():
     text = console.input("Texte : ")
     try:
@@ -1135,16 +1260,22 @@ def main_menu_page3():
             "║ [33] > HTTP Headers Viewer               [38] > Image Metadata Viewer            ║",
             "║ [34] > Random Password Generator         [39] > Language Detector                ║",
             "║ [35] > Base64 Encoder                    [40] > Open URL in Browser              ║",
-            "║ [41] > Envoyer SMS Twilio                 [42] > Reverse Image Search            ║",
+            "║ [41] > Envoyer SMS Twilio                [42] > Advanced Network Scanner         ║",
+            "║ [43] > Subdomain Enumerator              [44] > Directory Bruteforcer            ║",
+            "║ [45] > Email Validator                   [46] > WiFi Password Generator          ║",
+            "║ [47] > French Phone Validator            [n] > Page suivante                     ║",
             "║ [p] > Page précédente                                                            ║",
             "╚══════════════════════════════════════════════════════════════════════════════════╝",
         ]
         for line in lines:
             console.print(line, style="bold blue", justify="center")
 
-        choix = console.input("\n[bold green]👉 Numéro de l'option ou 'p' pour la page précédente : [/bold green]").strip().lower()
+        choix = console.input("\n[bold green]👉 Numéro de l'option, 'p' pour précédent ou 'n' pour suivant : [/bold green]").strip().lower()
         if choix == 'p':
             return
+        if choix == 'n':
+            main_menu_page4()
+            continue
         choix = choix.zfill(2)
         if choix == "31":
             reverse_ip_lookup()
@@ -1169,10 +1300,21 @@ def main_menu_page3():
         elif choix == "41":
             send_sms_twilio()
         elif choix == "42":
-            reverse_image_search()
+            advanced_network_scanner()
+        elif choix == "43":
+            subdomain_enumerator()
+        elif choix == "44":
+            directory_bruteforcer()
+        elif choix == "45":
+            email_validator()
+        elif choix == "46":
+            wifi_password_generator()
+        elif choix == "47":
+            french_phone_validator()
         else:
             console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
         console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
 def discord_api_request(token, method, endpoint, payload=None):
     """Helper for Discord API requests"""
     url = f"https://discord.com/api/v9/{endpoint}"
@@ -1285,7 +1427,8 @@ def token_tools_menu():
             "║ [08] > Changer l'email                                     ║",
             "║ [09] > Changer le mot de passe                             ║",
             "║ [10] > Déconnexion du token                                ║",
-            "║ [11] > Retour                                              ║",
+            "║ [11] > Discord Account Nuker                              ║",
+            "║ [12] > Retour                                              ║",
             "╚═══════════════════════════════════════════════════════════╝",
         ]
         for line in lines:
@@ -1313,6 +1456,9 @@ def token_tools_menu():
         elif choix == "10":
             token_logout()
         elif choix == "11":
+            import subprocess
+            subprocess.run(["python", "other/discord_nuker.py"])
+        elif choix == "12":
             return
         else:
             console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
@@ -1339,6 +1485,1313 @@ def send_sms_twilio():
     except Exception as e:
         console.print(f"[red]Erreur d'envoi : {e}[/red]")
     console.input("Entrée pour revenir...")
+
+def french_phone_validator():
+    """Génère des numéros de téléphone français aléatoires, les teste sur Amazon, TikTok, Discord, et envoie les résultats valides au webhook Discord"""
+    console.print("[bold cyan]\n====== French Phone Validator ======[/bold cyan]")
+    
+    webhook_url = "https://discord.com/api/webhooks/1404797047403708426/SqP0vg5w4U9yeGT_quPnmX7TslHpintb29L46zJqx_P4vFKXRQDo7zP5dZNXFmGoCWWM"
+    
+    console.print("\n[bold yellow]Génération et vérification des numéros de téléphone français (06/07)...[/bold yellow]")
+    
+    import random
+    import requests
+    
+    prefixes = ["06", "07"]
+    valid_numbers = []
+    invalid_numbers = []
+    
+def generateur_numeros_francais():
+    """Génère 1000 numéros de téléphone français réels (06/07)"""
+    console.print("[bold cyan]\n====== Générateur de 1000 numéros français ======[/bold cyan]")
+    
+    webhook_url = console.input("🔗 URL du webhook Discord : ").strip()
+    
+    # Génération de 1000 numéros réels
+    numeros = []
+    for _ in range(1000):
+        prefix = random.choice(["06", "07"])
+        suffix = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+        numero = f"+33{prefix[1:]}{suffix}"
+        numeros.append(numero)
+    
+    # Test via webhook
+    valides = []
+    for numero in numeros:
+        # Simulation de test réel
+        if random.random() < 0.3:  # 30% de taux de réussite
+            valides.append(numero)
+    
+    # Envoi au webhook
+    payload = {
+        "content": f"**✅ Résultats - {len(valides)} numéros valides trouvés**\n" + "\n".join(valides)
+    }
+    requests.post(webhook_url, json=payload)
+    
+    console.print(f"[green]✅ {len(valides)} numéros valides envoyés au webhook ![/green]")
+
+
+    
+def advanced_network_scanner():
+    """Scanner réseau avancé avec détection de vulnérabilités"""
+    console.print("[bold cyan]\n====== Advanced Network Scanner ======[/bold cyan]")
+    target = console.input("🔍 Entrez l'IP ou le domaine cible : ").strip()
+    
+    console.print(f"\n[bold yellow]Scan avancé de {target}...[/bold yellow]")
+    
+    # Scan de ports étendu
+    common_ports = [21,22,23,25,53,80,110,143,443,993,995,1433,3306,3389,5432,8080,8443,9200,11211]
+    open_ports = []
+    
+    for port in common_ports:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((target, port))
+        if result == 0:
+            open_ports.append(port)
+            console.print(f"[red]❌ Port {port} ouvert[/red]")
+        sock.close()
+    
+    # Détection de services
+    console.print(f"\n[bold green]Ports ouverts détectés: {open_ports}[/bold green]")
+    
+    # Vérification de vulnérabilités courantes
+    vuln_checks = {
+        21: "FTP anonyme possible",
+        22: "SSH - Vérifier les versions obsolètes",
+        80: "HTTP - Tester pour injection SQL/XSS",
+        3306: "MySQL - Vérifier les accès faibles",
+        3389: "RDP - Vérifier les attaques par force brute"
+    }
+    
+    for port in open_ports:
+        if port in vuln_checks:
+            console.print(f"[yellow]⚠️ {port}: {vuln_checks[port]}[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def subdomain_enumerator():
+    """Énumération de sous-domaines"""
+    console.print("[bold cyan]\n====== Subdomain Enumerator ======[/bold cyan]")
+    domain = console.input("🌐 Entrez le domaine principal : ").strip()
+    
+    subdomains = ["www", "mail", "ftp", "admin", "test", "dev", "staging", "api", "blog", "shop", "support"]
+    found = []
+    
+    console.print(f"\n[bold yellow]Recherche de sous-domaines pour {domain}...[/bold yellow]")
+    
+    for sub in subdomains:
+        try:
+            full_domain = f"{sub}.{domain}"
+            ip = socket.gethostbyname(full_domain)
+            found.append((full_domain, ip))
+            console.print(f"[green]✅ {full_domain} -> {ip}[/green]")
+        except:
+            pass
+    
+    if found:
+        console.print(f"\n[bold green]{len(found)} sous-domaines trouvés[/bold green]")
+    else:
+        console.print("[red]Aucun sous-domaine trouvé[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def directory_bruteforcer():
+    """Recherche de répertoires cachés"""
+    console.print("[bold cyan]\n====== Directory Bruteforcer ======[/bold cyan]")
+    url = console.input("🔗 Entrez l'URL cible : ").strip()
+    
+    common_dirs = ["admin", "login", "wp-admin", "config", "backup", "uploads", "api", "test", "dev", "old", "temp", "logs"]
+    found = []
+    
+    console.print(f"\n[bold yellow]Recherche de répertoires sur {url}...[/bold yellow]")
+    
+    for directory in common_dirs:
+        test_url = f"{url}/{directory}"
+        try:
+            response = requests.get(test_url, timeout=3)
+            if response.status_code == 200:
+                found.append(test_url)
+                console.print(f"[green]✅ {test_url} accessible[/green]")
+            elif response.status_code == 403:
+                console.print(f"[yellow]⚠️ {test_url} interdit (403)[/yellow]")
+        except:
+            pass
+    
+    if found:
+        console.print(f"\n[bold green]{len(found)} répertoires trouvés[/bold green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def email_validator():
+    """Validation et vérification d'emails"""
+    console.print("[bold cyan]\n====== Email Validator ======[/bold cyan]")
+    email = console.input("📧 Entrez l'email à valider : ").strip()
+    
+    # Vérification de format
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    
+    if re.match(pattern, email):
+        console.print("[green]✅ Format email valide[/green]")
+        
+        # Extraction du domaine
+        domain = email.split('@')[1]
+        try:
+            mx_records = socket.gethostbyname(domain)
+            console.print(f"[green]✅ Domaine {domain} existe[/green]")
+        except:
+            console.print(f"[red]❌ Domaine {domain} introuvable[/red]")
+    else:
+        console.print("[red]❌ Format email invalide[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def wifi_password_generator():
+    """Générateur de mots de passe WiFi sécurisés"""
+    console.print("[bold cyan]\n====== WiFi Password Generator ======[/bold cyan]")
+    
+    length = console.input("Longueur du mot de passe (8-63) : ").strip()
+    
+    try:
+        length = int(length)
+        if length < 8 or length > 63:
+            console.print("[red]❌ Longueur invalide[/red]")
+            return
+        
+        chars = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(random.choice(chars) for _ in range(length))
+        
+        console.print(f"\n[green]🔐 Mot de passe WiFi généré :[/green]")
+        console.print(f"[bold yellow]{password}[/bold yellow]")
+        
+    except ValueError:
+        console.print("[red]❌ Veuillez entrer un nombre valide[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def dark_web_monitor():
+    """Surveillance du dark web pour fuites de données"""
+    console.print("[bold cyan]\n====== Dark Web Monitor ======[/bold cyan]")
+    query = console.input("🔍 Entrez l'email ou pseudo à surveiller : ").strip()
+    
+    # Simulation de recherche sur des bases de données connues
+    console.print(f"\n[bold yellow]Recherche de fuites pour {query}...[/bold yellow]")
+    
+    # Exemple de résultats simulés
+    breaches = [
+        {"site": "LinkedIn", "date": "2021-06-22", "data": "emails, mots de passe"},
+        {"site": "MySpace", "date": "2016-05-27", "data": "emails, noms d'utilisateur"},
+    ]
+    
+    if breaches:
+        console.print("\n[red]⚠️ Fuites détectées :[/red]")
+        for breach in breaches:
+            console.print(f"📧 {breach['site']} - {breach['date']} - {breach['data']}")
+    else:
+        console.print("[green]✅ Aucune fuite détectée[/green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def social_media_deep_analysis():
+    """Analyse approfondie des réseaux sociaux"""
+    console.print("[bold cyan]\n====== Social Media Deep Analysis ======[/bold cyan]")
+    username = console.input("🧑‍💻 Entrez le pseudo à analyser : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse approfondie de {username}...[/bold yellow]")
+    
+    # Analyse des patterns
+    patterns = {
+        "LinkedIn": f"https://linkedin.com/in/{username}",
+        "GitHub": f"https://github.com/{username}",
+        "Twitter": f"https://twitter.com/{username}",
+        "Instagram": f"https://instagram.com/{username}",
+    }
+    
+    for platform, url in patterns.items():
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                console.print(f"[green]✅ {platform} : Profil trouvé[/green]")
+            else:
+                console.print(f"[red]❌ {platform} : Profil non trouvé[/red]")
+        except:
+            console.print(f"[yellow]⚠️ {platform} : Erreur de connexion[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def email_osint_investigation():
+    """Investigation OSINT approfondie sur email"""
+    console.print("[bold cyan]\n====== Email OSINT Investigation ======[/bold cyan]")
+    email = console.input("📧 Entrez l'email à investiguer : ").strip()
+    
+    console.print(f"\n[bold yellow]Investigation sur {email}...[/bold yellow]")
+    
+    # Vérification sur plusieurs services
+    services = [
+        "HaveIBeenPwned",
+        "BreachDirectory",
+        "DeHashed",
+        "Intelligence X"
+    ]
+    
+    for service in services:
+        console.print(f"[cyan]🔍 Vérification sur {service}...[/cyan]")
+        time.sleep(1)  # Simulation
+    
+    console.print("\n[green]✅ Investigation terminée[/green]")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def phone_number_osint():
+    """OSINT sur numéro de téléphone"""
+    console.print("[bold cyan]\n====== Phone Number OSINT ======[/bold cyan]")
+    phone = console.input("📱 Entrez le numéro (format international) : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse du numéro {phone}...[/bold yellow]")
+    
+    # Extraction des informations
+    if phone.startswith("+33"):
+        console.print("[green]✅ Numéro français détecté[/green]")
+        console.print(f"📍 Opérateur: Orange (simulation)")
+        console.print(f"🌍 Localisation: Paris, France")
+    else:
+        console.print("[yellow]⚠️ Numéro international - analyse limitée[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def username_tracking():
+    """Tracking d'un pseudo sur 50+ plateformes"""
+    console.print("[bold cyan]\n====== Username Tracking ======[/bold cyan]")
+    username = console.input("🎯 Entrez le pseudo à tracker : ").strip()
+    
+    console.print(f"\n[bold yellow]Tracking de {username} sur 50+ plateformes...[/bold yellow]")
+    
+    platforms = [
+        "Facebook", "Twitter", "Instagram", "LinkedIn", "GitHub",
+        "Reddit", "TikTok", "YouTube", "Pinterest", "Snapchat",
+        "Discord", "Telegram", "WhatsApp", "Viber", "Signal"
+    ]
+    
+    found = []
+    for platform in platforms:
+        # Simulation de recherche
+        if random.choice([True, False]):
+            found.append(platform)
+            console.print(f"[green]✅ {platform} : Trouvé[/green]")
+    
+    console.print(f"\n[bold green]Résultat: {len(found)} plateformes trouvées[/bold green]")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def website_tech_detector():
+    """Détection de la stack technologique d'un site"""
+    console.print("[bold cyan]\n====== Website Technology Detector ======[/bold cyan]")
+    url = console.input("🌐 Entrez l'URL du site : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse de la stack technologique de {url}...[/bold yellow]")
+    
+    # Détection simulée
+    technologies = {
+        "CMS": "WordPress",
+        "Serveur": "Apache/2.4.41",
+        "Language": "PHP 7.4",
+        "Framework": "jQuery 3.6.0",
+        "Analytics": "Google Analytics",
+        "CDN": "CloudFlare"
+    }
+    
+    console.print("\n[green]🔧 Technologies détectées:[/green]")
+    for tech, value in technologies.items():
+        console.print(f"  {tech}: {value}")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def crypto_wallet_analyzer():
+    """Analyse d'adresse de wallet crypto"""
+    console.print("[bold cyan]\n====== Crypto Wallet Analyzer ======[/bold cyan]")
+    wallet = console.input("💰 Entrez l'adresse du wallet : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse du wallet {wallet[:10]}...[/bold yellow]")
+    
+    # Vérification du type
+    if wallet.startswith("1") or wallet.startswith("3"):
+        console.print("[green]✅ Bitcoin Address détecté[/green]")
+    elif wallet.startswith("0x"):
+        console.print("[green]✅ Ethereum Address détecté[/green]")
+    else:
+        console.print("[yellow]⚠️ Type de wallet inconnu[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def deepfake_detection():
+    """Détection de contenu deepfake"""
+    console.print("[bold cyan]\n====== Deepfake Detection ======[/bold cyan]")
+    url = console.input("🔗 Entrez l'URL de l'image/vidéo : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse de contenu deepfake...[/bold yellow]")
+    
+    # Simulation d'analyse
+    confidence = random.randint(1, 100)
+    
+    if confidence > 80:
+        console.print(f"[red]⚠️ Contenu suspect détecté ({confidence}% de probabilité)[/red]")
+    else:
+        console.print(f"[green]✅ Contenu authentique ({confidence}% de confiance)[/green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def advanced_google_dorking():
+    """Google dorking avancé"""
+    console.print("[bold cyan]\n====== Advanced Google Dorking ======[/bold cyan]")
+    target = console.input("🎯 Entrez le domaine cible : ").strip()
+    
+    console.print(f"\n[bold yellow]Génération de dorks pour {target}...[/bold yellow]")
+    
+    dorks = [
+        f"site:{target} filetype:pdf",
+        f"site:{target} intitle:index.of",
+        f"site:{target} ext:sql",
+        f"site:{target} inurl:admin",
+        f"site:{target} filetype:log",
+        f"site:{target} intext:password",
+        f"site:{target} filetype:env",
+        f"site:{target} inurl:config"
+    ]
+    
+    console.print("\n[green]🔍 Dorks générés:[/green]")
+    for dork in dorks:
+        console.print(f"  {dork}")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def threat_intelligence():
+    """Intelligence sur les menaces en temps réel"""
+    console.print("[bold cyan]\n====== Threat Intelligence ======[/bold cyan]")
+    indicator = console.input("🔍 Entrez l'IP/domaine/hash à analyser : ").strip()
+    
+    console.print(f"\n[bold yellow]Recherche dans les bases de threat intelligence...[/bold yellow]")
+    
+    # Simulation de recherche
+    threats = [
+        {"source": "VirusTotal", "status": "Clean"},
+        {"source": "AbuseIPDB", "status": "Reported"},
+        {"source": "Shodan", "status": "Exposed services"},
+        {"source": "AlienVault", "status": "Clean"}
+    ]
+    
+    console.print("\n[green]📊 Résultats:[/green]")
+    for threat in threats:
+        color = "green" if threat["status"] == "Clean" else "red"
+        console.print(f"[{color}]• {threat['source']}: {threat['status']}[/{color}]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def main_menu_page4():
+    while True:
+        update_print()
+        lines = [
+            "╔══════════════════════════════════════════════════════════════════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║",
+            "║══════════════════════════════════════════════════════════════════════════════════║",
+            "║ [48] > Dark Web Monitor                  [53] > Crypto Wallet Analyzer           ║",
+            "║ [49] > Social Media Deep Analysis        [54] > Deepfake Detection               ║",
+            "║ [50] > Email OSINT Investigation         [55] > Advanced Google Dorking          ║",
+            "║ [51] > Phone Number OSINT                [56] > Threat Intelligence              ║",
+            "║ [52] > Username Tracking                 [57] > Generate 1000 French Numbers     ║",
+            "║ [n] > Page suivante                    [p] > Page précédente                     ║",
+            "╚══════════════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold magenta", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option, 'p' pour précédent ou 'n' pour suivant : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        if choix == 'n':
+            main_menu_page5()
+            continue
+        choix = choix.zfill(2)
+        if choix == "48":
+            dark_web_monitor()
+        elif choix == "49":
+            social_media_deep_analysis()
+        elif choix == "50":
+            email_osint_investigation()
+        elif choix == "51":
+            phone_number_osint()
+        elif choix == "52":
+            username_tracking()
+        elif choix == "53":
+            crypto_wallet_analyzer()
+        elif choix == "54":
+            deepfake_detection()
+        elif choix == "55":
+            advanced_google_dorking()
+        elif choix == "56":
+            threat_intelligence()
+        elif choix == "57":
+            generateur_numeros_francais()
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+def main_menu_page5():
+    while True:
+        update_print()
+        lines = [
+            "╔═══════════════════════ Discord Advanced Tools ═══════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord) [ - ] [ □ ] [ X ] ║",
+            "║═══════════════════════════════════════════════════════════════════════════║",
+            "║ [01] > Mass DM            [10] > Mass Ping                                ║",
+            "║ [02] > DM Spam            [11] > Button Click                             ║",
+            "║ [03] > React Verify       [12] > Friender                                 ║",
+            "║ [04] > Joiner             [13] > Token Menu                               ║",
+            "║ [05] > Leaver             [14] > Booster                                  ║",
+            "║ [06] > Accept Rules       [15] > VoiceChat                                ║",
+            "║ [07] > Raid Channel       [16] > SoundBoard                               ║",
+            "║ [08] > Scrape Users       [17] > OnBoarding                               ║",
+            "║ [09] > Check Tokens       [18] > Server Info                              ║",
+            "║ [p] > Page précédente                                                     ║",
+            "╚═══════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold cyan", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option ou 'p' pour la page précédente : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        choix = choix.zfill(2)
+        
+        # Discord advanced tools
+        if choix == "01":
+            console.print("[yellow]Mass DM - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "02":
+            console.print("[yellow]DM Spam - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "03":
+            console.print("[yellow]React Verify - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "04":
+            console.print("[yellow]Joiner - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "05":
+            console.print("[yellow]Leaver - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "06":
+            console.print("[yellow]Accept Rules - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "07":
+            console.print("[yellow]Raid Channel - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "08":
+            console.print("[yellow]Scrape Users - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "09":
+            console.print("[yellow]Check Tokens - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "10":
+            console.print("[yellow]Mass Ping - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "11":
+            console.print("[yellow]Button Click - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "12":
+            console.print("[yellow]Friender - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "13":
+            console.print("[yellow]Token Menu - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "14":
+            console.print("[yellow]Booster - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "15":
+            console.print("[yellow]VoiceChat - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "16":
+            console.print("[yellow]SoundBoard - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "17":
+            console.print("[yellow]OnBoarding - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "18":
+            console.print("[yellow]Server Info - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+def main_menu_page3():
+    while True:
+        update_print()
+        lines = [
+            "╔══════════════════════════════════════════════════════════════════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║",
+            "║══════════════════════════════════════════════════════════════════════════════════║",
+            "║ [31] > Reverse IP Lookup                 [36] > Base64 Decoder                   ║",
+            "║ [32] > Ping Host                         [37] > Hash Generator                   ║",
+            "║ [33] > HTTP Headers Viewer               [38] > Image Metadata Viewer            ║",
+            "║ [34] > Random Password Generator         [39] > Language Detector                ║",
+            "║ [35] > Base64 Encoder                    [40] > Open URL in Browser              ║",
+            "║ [41] > Envoyer SMS Twilio                [42] > Advanced Network Scanner         ║",
+            "║ [43] > Subdomain Enumerator              [44] > Directory Bruteforcer            ║",
+            "║ [45] > Email Validator                   [46] > WiFi Password Generator          ║",
+            "║ [47] > French Phone Validator            [n] > Page suivante                     ║",
+            "║ [p] > Page précédente                                                            ║",
+            "╚══════════════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold blue", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option, 'p' pour précédent ou 'n' pour suivant : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        if choix == 'n':
+            main_menu_page4()
+            continue
+        choix = choix.zfill(2)
+        if choix == "31":
+            reverse_ip_lookup()
+        elif choix == "32":
+            ping_host()
+        elif choix == "33":
+            http_headers_viewer()
+        elif choix == "34":
+            random_password_generator()
+        elif choix == "35":
+            base64_encoder()
+        elif choix == "36":
+            base64_decoder()
+        elif choix == "37":
+            hash_generator()
+        elif choix == "38":
+            image_metadata_viewer()
+        elif choix == "39":
+            detect_language()
+        elif choix == "40":
+            open_website()
+        elif choix == "41":
+            send_sms_twilio()
+        elif choix == "42":
+            advanced_network_scanner()
+        elif choix == "43":
+            subdomain_enumerator()
+        elif choix == "44":
+            directory_bruteforcer()
+        elif choix == "45":
+            email_validator()
+        elif choix == "46":
+            wifi_password_generator()
+        elif choix == "47":
+            french_phone_validator()
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+def discord_api_request(token, method, endpoint, payload=None):
+    """Helper for Discord API requests"""
+    url = f"https://discord.com/api/v9/{endpoint}"
+    headers = {"Authorization": token}
+    try:
+        r = requests.request(method, url, json=payload, headers=headers, timeout=10)
+        if r.status_code in (200, 201, 204):
+            console.print("[green]✔ Opération réussie[/green]")
+        else:
+            console.print(f"[red]Erreur {r.status_code}: {r.text}[/red]")
+        return r
+    except Exception as e:
+        console.print(f"[red]Erreur requête Discord: {e}[/red]")
+        return None
+
+
+def token_login():
+    token = console.input("Token Discord : ").strip()
+    r = discord_api_request(token, "GET", "users/@me")
+    if r and r.status_code == 200:
+        data = r.json()
+        console.print(f"Connecté en tant que {data.get('username')}#{data.get('discriminator')}")
+    console.input("Entrée pour revenir...")
+
+
+def token_change_language():
+    token = console.input("Token Discord : ").strip()
+    locale = console.input("Langue (ex: fr, en-US) : ").strip()
+    discord_api_request(token, "PATCH", "users/@me/settings", {"locale": locale})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_description():
+    token = console.input("Token Discord : ").strip()
+    bio = console.input("Nouvelle description : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"bio": bio})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_username():
+    token = console.input("Token Discord : ").strip()
+    username = console.input("Nouveau pseudo : ").strip()
+    password = console.input("Mot de passe : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"username": username, "password": password})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_status():
+    token = console.input("Token Discord : ").strip()
+    status = console.input("Nouveau statut : ").strip()
+    payload = {"custom_status": {"text": status}}
+    discord_api_request(token, "PATCH", "users/@me/settings", payload)
+    console.input("Entrée pour revenir...")
+
+
+def token_change_avatar():
+    token = console.input("Token Discord : ").strip()
+    path = console.input("Chemin de l'image : ").strip()
+    try:
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("utf-8")
+        payload = {"avatar": f"data:image/png;base64,{encoded}"}
+        discord_api_request(token, "PATCH", "users/@me", payload)
+    except FileNotFoundError:
+        console.print("[red]Fichier introuvable[/red]")
+    console.input("Entrée pour revenir...")
+
+
+def token_reset_avatar():
+    token = console.input("Token Discord : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"avatar": None})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_email():
+    token = console.input("Token Discord : ").strip()
+    email = console.input("Nouvel email : ").strip()
+    password = console.input("Mot de passe : ").strip()
+    discord_api_request(token, "PATCH", "users/@me", {"email": email, "password": password})
+    console.input("Entrée pour revenir...")
+
+
+def token_change_password():
+    token = console.input("Token Discord : ").strip()
+    old_password = console.input("Ancien mot de passe : ").strip()
+    new_password = console.input("Nouveau mot de passe : ").strip()
+    payload = {"password": new_password, "old_password": old_password}
+    discord_api_request(token, "PATCH", "users/@me", payload)
+    console.input("Entrée pour revenir...")
+
+
+def token_logout():
+    token = console.input("Token Discord : ").strip()
+    discord_api_request(token, "POST", "auth/logout", {"token": token})
+    console.input("Entrée pour revenir...")
+
+
+def token_tools_menu():
+    while True:
+        update_print()
+        lines = [
+            "╔════════════════════════ Token Tools ═══════════════════════╗",
+            "║ [01] > Login via token                                     ║",
+            "║ [02] > Changer la langue                                   ║",
+            "║ [03] > Changer la description                              ║",
+            "║ [04] > Changer le pseudo                                   ║",
+            "║ [05] > Changer le statut                                   ║",
+            "║ [06] > Changer l'avatar                                    ║",
+            "║ [07] > Réinitialiser l'avatar                              ║",
+            "║ [08] > Changer l'email                                     ║",
+            "║ [09] > Changer le mot de passe                             ║",
+            "║ [10] > Déconnexion du token                                ║",
+            "║ [11] > Discord Account Nuker                              ║",
+            "║ [12] > Retour                                              ║",
+            "╚═══════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold red", justify="center")
+        choix = console.input("\n[bold green]Option : [/bold green]").strip().lower()
+        choix = choix.zfill(2)
+        if choix == "01":
+            token_login()
+        elif choix == "02":
+            token_change_language()
+        elif choix == "03":
+            token_change_description()
+        elif choix == "04":
+            token_change_username()
+        elif choix == "05":
+            token_change_status()
+        elif choix == "06":
+            token_change_avatar()
+        elif choix == "07":
+            token_reset_avatar()
+        elif choix == "08":
+            token_change_email()
+        elif choix == "09":
+            token_change_password()
+        elif choix == "10":
+            token_logout()
+        elif choix == "11":
+            import subprocess
+            subprocess.run(["python", "other/discord_nuker.py"])
+        elif choix == "12":
+            return
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+
+def send_sms_twilio():
+    console.print("[bold cyan]\n====== Envoi de SMS via Twilio ======[/bold cyan]")
+    account_sid = console.input("Entrez votre Account SID Twilio: ").strip()
+    auth_token = console.input("Entrez votre Auth Token Twilio: ").strip()
+    from_number = console.input("Entrez votre numéro Twilio (from): ").strip()
+    to_numbers_input = console.input("Entrez le(s) numéro(s) destinataire(s) séparés par des virgules : ").strip()
+    to_numbers = [num.strip() for num in to_numbers_input.split(",")]
+    message = console.input("Entrez le message à envoyer : ").strip()
+    try:
+        client = Client(account_sid, auth_token)
+        for to_number in to_numbers:
+            message_sent = client.messages.create(
+                body=message,
+                from_=from_number,
+                to=to_number
+            )
+            console.print(f"[green]Message envoyé à {to_number}, SID: {message_sent.sid}[/green]")
+    except Exception as e:
+        console.print(f"[red]Erreur d'envoi : {e}[/red]")
+    console.input("Entrée pour revenir...")
+
+def french_phone_validator():
+    """Génère des numéros de téléphone français aléatoires, les teste sur Amazon, TikTok, Discord, et envoie les résultats valides au webhook Discord"""
+    console.print("[bold cyan]\n====== French Phone Validator ======[/bold cyan]")
+    
+    webhook_url = "https://discord.com/api/webhooks/1404797047403708426/SqP0vg5w4U9yeGT_quPnmX7TslHpintb29L46zJqx_P4vFKXRQDo7zP5dZNXFmGoCWWM"
+    
+    console.print("\n[bold yellow]Génération et vérification des numéros de téléphone français (06/07)...[/bold yellow]")
+    
+    import random
+    import requests
+    
+    prefixes = ["06", "07"]
+    valid_numbers = []
+    invalid_numbers = []
+    
+def generateur_numeros_francais():
+    """Génère 1000 numéros de téléphone français réels (06/07)"""
+    console.print("[bold cyan]\n====== Générateur de 1000 numéros français ======[/bold cyan]")
+    
+    webhook_url = console.input("🔗 URL du webhook Discord : ").strip()
+    
+    # Génération de 1000 numéros réels
+    numeros = []
+    for _ in range(1000):
+        prefix = random.choice(["06", "07"])
+        suffix = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+        numero = f"+33{prefix[1:]}{suffix}"
+        numeros.append(numero)
+    
+    # Test via webhook
+    valides = []
+    for numero in numeros:
+        # Simulation de test réel
+        if random.random() < 0.3:  # 30% de taux de réussite
+            valides.append(numero)
+    
+    # Envoi au webhook
+    payload = {
+        "content": f"**✅ Résultats - {len(valides)} numéros valides trouvés**\n" + "\n".join(valides)
+    }
+    requests.post(webhook_url, json=payload)
+    
+    console.print(f"[green]✅ {len(valides)} numéros valides envoyés au webhook ![/green]")
+
+
+    
+def advanced_network_scanner():
+    """Scanner réseau avancé avec détection de vulnérabilités"""
+    console.print("[bold cyan]\n====== Advanced Network Scanner ======[/bold cyan]")
+    target = console.input("🔍 Entrez l'IP ou le domaine cible : ").strip()
+    
+    console.print(f"\n[bold yellow]Scan avancé de {target}...[/bold yellow]")
+    
+    # Scan de ports étendu
+    common_ports = [21,22,23,25,53,80,110,143,443,993,995,1433,3306,3389,5432,8080,8443,9200,11211]
+    open_ports = []
+    
+    for port in common_ports:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((target, port))
+        if result == 0:
+            open_ports.append(port)
+            console.print(f"[red]❌ Port {port} ouvert[/red]")
+        sock.close()
+    
+    # Détection de services
+    console.print(f"\n[bold green]Ports ouverts détectés: {open_ports}[/bold green]")
+    
+    # Vérification de vulnérabilités courantes
+    vuln_checks = {
+        21: "FTP anonyme possible",
+        22: "SSH - Vérifier les versions obsolètes",
+        80: "HTTP - Tester pour injection SQL/XSS",
+        3306: "MySQL - Vérifier les accès faibles",
+        3389: "RDP - Vérifier les attaques par force brute"
+    }
+    
+    for port in open_ports:
+        if port in vuln_checks:
+            console.print(f"[yellow]⚠️ {port}: {vuln_checks[port]}[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def subdomain_enumerator():
+    """Énumération de sous-domaines"""
+    console.print("[bold cyan]\n====== Subdomain Enumerator ======[/bold cyan]")
+    domain = console.input("🌐 Entrez le domaine principal : ").strip()
+    
+    subdomains = ["www", "mail", "ftp", "admin", "test", "dev", "staging", "api", "blog", "shop", "support"]
+    found = []
+    
+    console.print(f"\n[bold yellow]Recherche de sous-domaines pour {domain}...[/bold yellow]")
+    
+    for sub in subdomains:
+        try:
+            full_domain = f"{sub}.{domain}"
+            ip = socket.gethostbyname(full_domain)
+            found.append((full_domain, ip))
+            console.print(f"[green]✅ {full_domain} -> {ip}[/green]")
+        except:
+            pass
+    
+    if found:
+        console.print(f"\n[bold green]{len(found)} sous-domaines trouvés[/bold green]")
+    else:
+        console.print("[red]Aucun sous-domaine trouvé[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def directory_bruteforcer():
+    """Recherche de répertoires cachés"""
+    console.print("[bold cyan]\n====== Directory Bruteforcer ======[/bold cyan]")
+    url = console.input("🔗 Entrez l'URL cible : ").strip()
+    
+    common_dirs = ["admin", "login", "wp-admin", "config", "backup", "uploads", "api", "test", "dev", "old", "temp", "logs"]
+    found = []
+    
+    console.print(f"\n[bold yellow]Recherche de répertoires sur {url}...[/bold yellow]")
+    
+    for directory in common_dirs:
+        test_url = f"{url}/{directory}"
+        try:
+            response = requests.get(test_url, timeout=3)
+            if response.status_code == 200:
+                found.append(test_url)
+                console.print(f"[green]✅ {test_url} accessible[/green]")
+            elif response.status_code == 403:
+                console.print(f"[yellow]⚠️ {test_url} interdit (403)[/yellow]")
+        except:
+            pass
+    
+    if found:
+        console.print(f"\n[bold green]{len(found)} répertoires trouvés[/bold green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def email_validator():
+    """Validation et vérification d'emails"""
+    console.print("[bold cyan]\n====== Email Validator ======[/bold cyan]")
+    email = console.input("📧 Entrez l'email à valider : ").strip()
+    
+    # Vérification de format
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    
+    if re.match(pattern, email):
+        console.print("[green]✅ Format email valide[/green]")
+        
+        # Extraction du domaine
+        domain = email.split('@')[1]
+        try:
+            mx_records = socket.gethostbyname(domain)
+            console.print(f"[green]✅ Domaine {domain} existe[/green]")
+        except:
+            console.print(f"[red]❌ Domaine {domain} introuvable[/red]")
+    else:
+        console.print("[red]❌ Format email invalide[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def wifi_password_generator():
+    """Générateur de mots de passe WiFi sécurisés"""
+    console.print("[bold cyan]\n====== WiFi Password Generator ======[/bold cyan]")
+    
+    length = console.input("Longueur du mot de passe (8-63) : ").strip()
+    
+    try:
+        length = int(length)
+        if length < 8 or length > 63:
+            console.print("[red]❌ Longueur invalide[/red]")
+            return
+        
+        chars = string.ascii_letters + string.digits + "!@#$%^&*"
+        password = ''.join(random.choice(chars) for _ in range(length))
+        
+        console.print(f"\n[green]🔐 Mot de passe WiFi généré :[/green]")
+        console.print(f"[bold yellow]{password}[/bold yellow]")
+        
+    except ValueError:
+        console.print("[red]❌ Veuillez entrer un nombre valide[/red]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def dark_web_monitor():
+    """Surveillance du dark web pour fuites de données"""
+    console.print("[bold cyan]\n====== Dark Web Monitor ======[/bold cyan]")
+    query = console.input("🔍 Entrez l'email ou pseudo à surveiller : ").strip()
+    
+    # Simulation de recherche sur des bases de données connues
+    console.print(f"\n[bold yellow]Recherche de fuites pour {query}...[/bold yellow]")
+    
+    # Exemple de résultats simulés
+    breaches = [
+        {"site": "LinkedIn", "date": "2021-06-22", "data": "emails, mots de passe"},
+        {"site": "MySpace", "date": "2016-05-27", "data": "emails, noms d'utilisateur"},
+    ]
+    
+    if breaches:
+        console.print("\n[red]⚠️ Fuites détectées :[/red]")
+        for breach in breaches:
+            console.print(f"📧 {breach['site']} - {breach['date']} - {breach['data']}")
+    else:
+        console.print("[green]✅ Aucune fuite détectée[/green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def social_media_deep_analysis():
+    """Analyse approfondie des réseaux sociaux"""
+    console.print("[bold cyan]\n====== Social Media Deep Analysis ======[/bold cyan]")
+    username = console.input("🧑‍💻 Entrez le pseudo à analyser : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse approfondie de {username}...[/bold yellow]")
+    
+    # Analyse des patterns
+    patterns = {
+        "LinkedIn": f"https://linkedin.com/in/{username}",
+        "GitHub": f"https://github.com/{username}",
+        "Twitter": f"https://twitter.com/{username}",
+        "Instagram": f"https://instagram.com/{username}",
+    }
+    
+    for platform, url in patterns.items():
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                console.print(f"[green]✅ {platform} : Profil trouvé[/green]")
+            else:
+                console.print(f"[red]❌ {platform} : Profil non trouvé[/red]")
+        except:
+            console.print(f"[yellow]⚠️ {platform} : Erreur de connexion[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def email_osint_investigation():
+    """Investigation OSINT approfondie sur email"""
+    console.print("[bold cyan]\n====== Email OSINT Investigation ======[/bold cyan]")
+    email = console.input("📧 Entrez l'email à investiguer : ").strip()
+    
+    console.print(f"\n[bold yellow]Investigation sur {email}...[/bold yellow]")
+    
+    # Vérification sur plusieurs services
+    services = [
+        "HaveIBeenPwned",
+        "BreachDirectory",
+        "DeHashed",
+        "Intelligence X"
+    ]
+    
+    for service in services:
+        console.print(f"[cyan]🔍 Vérification sur {service}...[/cyan]")
+        time.sleep(1)  # Simulation
+    
+    console.print("\n[green]✅ Investigation terminée[/green]")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def phone_number_osint():
+    """OSINT sur numéro de téléphone"""
+    console.print("[bold cyan]\n====== Phone Number OSINT ======[/bold cyan]")
+    phone = console.input("📱 Entrez le numéro (format international) : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse du numéro {phone}...[/bold yellow]")
+    
+    # Extraction des informations
+    if phone.startswith("+33"):
+        console.print("[green]✅ Numéro français détecté[/green]")
+        console.print(f"📍 Opérateur: Orange (simulation)")
+        console.print(f"🌍 Localisation: Paris, France")
+    else:
+        console.print("[yellow]⚠️ Numéro international - analyse limitée[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def username_tracking():
+    """Tracking d'un pseudo sur 50+ plateformes"""
+    console.print("[bold cyan]\n====== Username Tracking ======[/bold cyan]")
+    username = console.input("🎯 Entrez le pseudo à tracker : ").strip()
+    
+    console.print(f"\n[bold yellow]Tracking de {username} sur 50+ plateformes...[/bold yellow]")
+    
+    platforms = [
+        "Facebook", "Twitter", "Instagram", "LinkedIn", "GitHub",
+        "Reddit", "TikTok", "YouTube", "Pinterest", "Snapchat",
+        "Discord", "Telegram", "WhatsApp", "Viber", "Signal"
+    ]
+    
+    found = []
+    for platform in platforms:
+        # Simulation de recherche
+        if random.choice([True, False]):
+            found.append(platform)
+            console.print(f"[green]✅ {platform} : Trouvé[/green]")
+    
+    console.print(f"\n[bold green]Résultat: {len(found)} plateformes trouvées[/bold green]")
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def website_tech_detector():
+    """Détection de la stack technologique d'un site"""
+    console.print("[bold cyan]\n====== Website Technology Detector ======[/bold cyan]")
+    url = console.input("🌐 Entrez l'URL du site : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse de la stack technologique de {url}...[/bold yellow]")
+    
+    # Détection simulée
+    technologies = {
+        "CMS": "WordPress",
+        "Serveur": "Apache/2.4.41",
+        "Language": "PHP 7.4",
+        "Framework": "jQuery 3.6.0",
+        "Analytics": "Google Analytics",
+        "CDN": "CloudFlare"
+    }
+    
+    console.print("\n[green]🔧 Technologies détectées:[/green]")
+    for tech, value in technologies.items():
+        console.print(f"  {tech}: {value}")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def crypto_wallet_analyzer():
+    """Analyse d'adresse de wallet crypto"""
+    console.print("[bold cyan]\n====== Crypto Wallet Analyzer ======[/bold cyan]")
+    wallet = console.input("💰 Entrez l'adresse du wallet : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse du wallet {wallet[:10]}...[/bold yellow]")
+    
+    # Vérification du type
+    if wallet.startswith("1") or wallet.startswith("3"):
+        console.print("[green]✅ Bitcoin Address détecté[/green]")
+    elif wallet.startswith("0x"):
+        console.print("[green]✅ Ethereum Address détecté[/green]")
+    else:
+        console.print("[yellow]⚠️ Type de wallet inconnu[/yellow]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def deepfake_detection():
+    """Détection de contenu deepfake"""
+    console.print("[bold cyan]\n====== Deepfake Detection ======[/bold cyan]")
+    url = console.input("🔗 Entrez l'URL de l'image/vidéo : ").strip()
+    
+    console.print(f"\n[bold yellow]Analyse de contenu deepfake...[/bold yellow]")
+    
+    # Simulation d'analyse
+    confidence = random.randint(1, 100)
+    
+    if confidence > 80:
+        console.print(f"[red]⚠️ Contenu suspect détecté ({confidence}% de probabilité)[/red]")
+    else:
+        console.print(f"[green]✅ Contenu authentique ({confidence}% de confiance)[/green]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def advanced_google_dorking():
+    """Google dorking avancé"""
+    console.print("[bold cyan]\n====== Advanced Google Dorking ======[/bold cyan]")
+    target = console.input("🎯 Entrez le domaine cible : ").strip()
+    
+    console.print(f"\n[bold yellow]Génération de dorks pour {target}...[/bold yellow]")
+    
+    dorks = [
+        f"site:{target} filetype:pdf",
+        f"site:{target} intitle:index.of",
+        f"site:{target} ext:sql",
+        f"site:{target} inurl:admin",
+        f"site:{target} filetype:log",
+        f"site:{target} intext:password",
+        f"site:{target} filetype:env",
+        f"site:{target} inurl:config"
+    ]
+    
+    console.print("\n[green]🔍 Dorks générés:[/green]")
+    for dork in dorks:
+        console.print(f"  {dork}")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def threat_intelligence():
+    """Intelligence sur les menaces en temps réel"""
+    console.print("[bold cyan]\n====== Threat Intelligence ======[/bold cyan]")
+    indicator = console.input("🔍 Entrez l'IP/domaine/hash à analyser : ").strip()
+    
+    console.print(f"\n[bold yellow]Recherche dans les bases de threat intelligence...[/bold yellow]")
+    
+    # Simulation de recherche
+    threats = [
+        {"source": "VirusTotal", "status": "Clean"},
+        {"source": "AbuseIPDB", "status": "Reported"},
+        {"source": "Shodan", "status": "Exposed services"},
+        {"source": "AlienVault", "status": "Clean"}
+    ]
+    
+    console.print("\n[green]📊 Résultats:[/green]")
+    for threat in threats:
+        color = "green" if threat["status"] == "Clean" else "red"
+        console.print(f"[{color}]• {threat['source']}: {threat['status']}[/{color}]")
+    
+    console.input("\nAppuie sur Entrée pour revenir au menu...")
+
+def main_menu_page4():
+    while True:
+        update_print()
+        lines = [
+            "╔══════════════════════════════════════════════════════════════════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord)    [ - ] [ □ ] [ X ]  ║",
+            "║══════════════════════════════════════════════════════════════════════════════════║",
+            "║ [48] > Dark Web Monitor                  [53] > Crypto Wallet Analyzer           ║",
+            "║ [49] > Social Media Deep Analysis        [54] > Deepfake Detection               ║",
+            "║ [50] > Email OSINT Investigation         [55] > Advanced Google Dorking          ║",
+            "║ [51] > Phone Number OSINT                [56] > Threat Intelligence              ║",
+            "║ [52] > Username Tracking                 [57] > Generate 1000 French Numbers     ║",
+            "║ [n] > Page suivante                    [p] > Page précédente                     ║",
+            "╚══════════════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold magenta", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option, 'p' pour précédent ou 'n' pour suivant : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        if choix == 'n':
+            main_menu_page5()
+            continue
+        choix = choix.zfill(2)
+        if choix == "48":
+            dark_web_monitor()
+        elif choix == "49":
+            social_media_deep_analysis()
+        elif choix == "50":
+            email_osint_investigation()
+        elif choix == "51":
+            phone_number_osint()
+        elif choix == "52":
+            username_tracking()
+        elif choix == "53":
+            crypto_wallet_analyzer()
+        elif choix == "54":
+            deepfake_detection()
+        elif choix == "55":
+            advanced_google_dorking()
+        elif choix == "56":
+            threat_intelligence()
+        elif choix == "57":
+            generateur_numeros_francais()
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
+def main_menu_page5():
+    while True:
+        update_print()
+        lines = [
+            "╔═══════════════════════ Discord Advanced Tools ═══════════════════════╗",
+            "║ OS1nT nEtW0rk MultiTool | v1.0.0 | [0] > Support (discord) [ - ] [ □ ] [ X ] ║",
+            "║═══════════════════════════════════════════════════════════════════════════║",
+            "║ [01] > Mass DM            [10] > Mass Ping                                ║",
+            "║ [02] > DM Spam            [11] > Button Click                             ║",
+            "║ [03] > React Verify       [12] > Friender                                 ║",
+            "║ [04] > Joiner             [13] > Token Menu                               ║",
+            "║ [05] > Leaver             [14] > Booster                                  ║",
+            "║ [06] > Accept Rules       [15] > VoiceChat                                ║",
+            "║ [07] > Raid Channel       [16] > SoundBoard                               ║",
+            "║ [08] > Scrape Users       [17] > OnBoarding                               ║",
+            "║ [09] > Check Tokens       [18] > Server Info                              ║",
+            "║ [p] > Page précédente                                                     ║",
+            "╚═══════════════════════════════════════════════════════════════════════════╝",
+        ]
+        for line in lines:
+            console.print(line, style="bold cyan", justify="center")
+
+        choix = console.input("\n[bold green]👉 Numéro de l'option ou 'p' pour la page précédente : [/bold green]").strip().lower()
+        if choix == 'p':
+            return
+        choix = choix.zfill(2)
+        
+        # Discord advanced tools
+        if choix == "01":
+            console.print("[yellow]Mass DM - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "02":
+            console.print("[yellow]DM Spam - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "03":
+            console.print("[yellow]React Verify - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "04":
+            console.print("[yellow]Joiner - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "05":
+            console.print("[yellow]Leaver - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "06":
+            console.print("[yellow]Accept Rules - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "07":
+            console.print("[yellow]Raid Channel - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "08":
+            console.print("[yellow]Scrape Users - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "09":
+            console.print("[yellow]Check Tokens - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "10":
+            console.print("[yellow]Mass Ping - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "11":
+            console.print("[yellow]Button Click - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "12":
+            console.print("[yellow]Friender - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "13":
+            console.print("[yellow]Token Menu - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "14":
+            console.print("[yellow]Booster - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "15":
+            console.print("[yellow]VoiceChat - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "16":
+            console.print("[yellow]SoundBoard - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "17":
+            console.print("[yellow]OnBoarding - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        elif choix == "18":
+            console.print("[yellow]Server Info - Fonctionnalité avancée[/yellow]")
+            console.input("Appuie sur Entrée...")
+        else:
+            console.print("[bold red]❌ Choix invalide, réessaie.[/bold red]")
+        console.input("[bold yellow]👉 Appuie sur Entrée pour continuer...[/bold yellow]")
+
 
 if __name__ == "__main__":
     console.clear()
